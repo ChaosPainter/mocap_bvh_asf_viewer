@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>fragment.frag</file>
+        <file>vertex.vert</file>
+        <file>icony/backward.png</file>
+        <file>icony/forward.png</file>
+        <file>icony/pause.png</file>
+        <file>icony/stop.png</file>
+        <file>icony/play.png</file>
+    </qresource>
+</RCC>
