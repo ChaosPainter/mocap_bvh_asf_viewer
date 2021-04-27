@@ -15,15 +15,14 @@ struct InputInstance : std::pair<T, Input::InputState>
   }
 };
 
-// Instance types
+
 typedef InputInstance<Qt::Key> KeyInstance;
 typedef InputInstance<Qt::MouseButton> ButtonInstance;
 
-//// Container types
+
 typedef std::vector<KeyInstance> KeyContainer;
 typedef std::vector<ButtonInstance> ButtonContainer;
 
-//// Globals
 static KeyContainer sg_keyInstances;
 static ButtonContainer sg_buttonInstances;
 static QPoint sg_mouseCurrPosition;
@@ -71,17 +70,13 @@ static inline void Update(Container &container)
   typedef typename Container::iterator Iter;
   typedef typename Container::value_type TPair;
 
-  // Remove old data
+
   Iter remove = std::remove_if(container.begin(), container.end(), &CheckReleased<TPair>);
   container.erase(remove, container.end());
 
-  // Update existing data
   std::for_each(container.begin(), container.end(), &UpdateStates<TPair>);
 }
 
-///*******************************************************************************
-// * Input Implementation
-// ******************************************************************************/
 Input::InputState Input::keyState(Qt::Key k)
 {
   KeyContainer::iterator it = FindKey(k);
@@ -94,10 +89,6 @@ Input::InputState Input::buttonState(Qt::MouseButton k)
   return (it != sg_buttonInstances.end()) ? it->second : InputInvalid;
 }
 
-//QPoint Input::mousePosition()
-//{
-//  return QCursor::pos();
-//}
 
 QPoint Input::mouseDelta()
 {
@@ -106,12 +97,10 @@ QPoint Input::mouseDelta()
 
 void Input::update()
 {
-  // Update Mouse Delta
   sg_mousePrevPosition = sg_mouseCurrPosition;
   sg_mouseCurrPosition = QCursor::pos();
   sg_mouseDelta = sg_mouseCurrPosition - sg_mousePrevPosition;
 
-  // Update KeyState values
   Update(sg_buttonInstances);
   Update(sg_keyInstances);
 }
@@ -152,8 +141,3 @@ void Input::registerMouseRelease(Qt::MouseButton btn)
   }
 }
 
-//void Input::reset()
-//{
-//  sg_keyInstances.clear();
-//  sg_buttonInstances.clear();
-//}

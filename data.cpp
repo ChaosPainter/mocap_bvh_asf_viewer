@@ -16,7 +16,7 @@
 }
 
 
-return_bvh Data::create_bvh(fstream &file) {
+return_bvh_hierarchy_motion Data::create_bvh(fstream &file) {
     int id = 0;
     frames_data f_bvh;
     frames_data f_data;
@@ -25,8 +25,10 @@ return_bvh Data::create_bvh(fstream &file) {
     root_bvh root_bvh;
     joint_bvh j_bvh;
     vector<joint_bvh> v_j_bvh;
-    return_bvh r_bvh;
+    return_bvh_hierarchy_motion r_bvh;
+    return_bvh_hierarchy r_h;
     string text = "";
+    error e;
 
     while (text != "HIERARCHY" && file.eof() != true)
     {						///tu jesteś w sprawdzanu
@@ -34,37 +36,64 @@ return_bvh Data::create_bvh(fstream &file) {
         file >> text;
 
     }
+    if (file.eof())
+    {
+        e.msg="no hierarchy";
+        e.code=1001;
+        r_bvh.exception=e;
+        return r_bvh;
+    }
 
     if (text == "HIERARCHY" && file.eof() != true)
     {
-        file >> text;
-        if (text == "ROOT")
+        while (text!="ROOT" && file.eof() != true)
         {
-            h_bvh = create_root_bvh(file, id, text);
+            file >> text;
+        }
 
-            j_bvh.id = 0; //dumy joint
-            j_bvh.name = h_bvh.root.name;
-            j_bvh.channels = h_bvh.root.channel_names;
-            j_bvh.offset=h_bvh.root.start_cords;
-            j_bvh.channel_count=h_bvh.root.channel_count;
-            j_bvh.channels=h_bvh.root.channel_names;
-            j_bvh.children=h_bvh.root.children;
-            //j_bvh.parent="root";
-            h_bvh.joints.push_back(j_bvh);
+        if (file.eof())
+        {
+            e.msg="no root";
+            e.code=1002;
+            r_bvh.exception=e;
+            return r_bvh;
+        }
 
-            vector <joint_bvh> joints(h_bvh.joints.size());
-            for (int i = 0; i < h_bvh.joints.size(); ++i)
-            {
-                joints[h_bvh.joints[i].id]=h_bvh.joints[i];
-            }
+        r_h = create_root_bvh(file, id, text);
 
-            h_bvh.joints.clear();
-            h_bvh.joints=joints;
+        if (r_h.e.code!=0)
+        {
+            r_bvh.exception=r_h.e;
+            return r_bvh;
+        }
+
+        h_bvh=r_h.h_bvh;
+
+        j_bvh.id = 0;
+        j_bvh.name = h_bvh.root.name;
+        j_bvh.channels = h_bvh.root.channel_names;
+        j_bvh.offset=h_bvh.root.start_cords;
+        j_bvh.channel_count=h_bvh.root.channel_count;
+        j_bvh.channels=h_bvh.root.channel_names;
+        j_bvh.children=h_bvh.root.children;
+        //j_bvh.parent="root";
+        h_bvh.joints.push_back(j_bvh);
+
+        vector <joint_bvh> joints(h_bvh.joints.size());
+        for (int i = 0; i < h_bvh.joints.size(); ++i)
+        {
+            joints[h_bvh.joints[i].id]=h_bvh.joints[i];
+        }
+
+        h_bvh.joints.clear();
+        h_bvh.joints=joints;
 
 
 
         }
-        else{}}
+
+
+
           //  cout << "wtf";// błąd formatowania pliku brak otwarcia ROOT
 
 
@@ -74,10 +103,23 @@ return_bvh Data::create_bvh(fstream &file) {
         file >> text;
 
     }
+    if (file.eof())
+    {
+        e.msg="no motion";
+        e.code=1003;
+        r_bvh.exception=e;
+        return r_bvh;
+    }
+
     if (text == "MOTION" && file.eof() != true)
     {
         f_data = create_frames_bvh(h_bvh, file, text);
 
+    }
+    if (e.code!=0)
+    {
+        r_bvh.exception=e;
+        return r_bvh;
     }
     bvh_pc_index(h_bvh,f_data);
     bvh_depth(h_bvh);
@@ -86,30 +128,57 @@ return_bvh Data::create_bvh(fstream &file) {
     return r_bvh;
 
 }
-hierarchy_bvh Data::create_root_bvh(fstream& file,int &id, string &text) { ///hierarchia bvh
+return_bvh_hierarchy Data::create_root_bvh(fstream& file,int &id, string &text) { ///hierarchia bvh
 
     ret_r_j temp;
     double num;
     hierarchy_bvh hierarchy;
+    return_bvh_hierarchy ret;
+    error e;
+
     file >> text;
+    if (text=="OFFSET"||text=="CHANNELS"||text=="JOINT"||text=="End"||text=="MOTION")
+    {
+        e.msg="no root name";
+        e.code=1101;
+        ret.e=e;
+        return ret;
+    }
     hierarchy.root.name = text;
     hierarchy.root.id = id;
     while (text != "OFFSET" && file.eof() != true)
     {
         file >> text;
 
+        if (file.eof()||text=="CHANNELS"||text=="JOINT"||text=="End"||text=="MOTION")
+        {
+            e.msg="no root offset tag";
+            e.code=1102;
+            ret.e=e;
+            return ret;
+        }
     }
+
     for (int i = 0; i < 3; i++)
     {
         file >> num;
         hierarchy.root.start_cords.push_back(num);
 
     }
+
     while (text != "CHANNELS" && file.eof() != true)
     {
         file >> text;
+        if (file.eof()||text=="JOINT"||text=="End"||text=="MOTION")
+        {
+            e.msg="no root channels tag";
+            e.code=1103;
+            ret.e=e;
+            return ret;
+        }
 
     }
+
     file >> num;
     hierarchy.root.channel_count = num;
 
@@ -122,16 +191,39 @@ hierarchy_bvh Data::create_root_bvh(fstream& file,int &id, string &text) { ///hi
     while (text != "MOTION" && file.eof() != true)
     {
         file >> text;
+        if (file.eof())
+        {
+            e.msg="no motion tag";
+            e.code=1104;
+            temp.e=e;
+            return ret;
+        }
         if (text=="JOINT")
         {
             temp=create_joint_bvh(hierarchy.root.name, hierarchy, file,id,0,text);
+            if (temp.e.code!=0) 
+            {
+                ret.e=temp.e;
+                return ret;
+            }
+            hierarchy = temp.hierarchy;
+            hierarchy.root.children.push_back(temp.child);
+        }
+        if (text=="End")
+        {
+            temp=create_joint_bvh(hierarchy.root.name, hierarchy, file,id,1,text);
+            if (temp.e.code!=0)
+            {
+                ret.e=temp.e;
+                return ret;
+            }
             hierarchy = temp.hierarchy;
             hierarchy.root.children.push_back(temp.child);
         }
 
     }
-
-    return hierarchy;
+ret.h_bvh=hierarchy;
+    return ret;
 
 }
 ret_r_j Data::create_joint_bvh(string parent, hierarchy_bvh &hierarchy, fstream& file, int &id, int fl, string &text) { ///joint bvh
@@ -139,10 +231,19 @@ ret_r_j Data::create_joint_bvh(string parent, hierarchy_bvh &hierarchy, fstream&
     ret_r_j temp2;
     joint_bvh t_j;
     double num;
+    error e;
 
 
-    if (fl == 0) { // normal joint
+    if (fl == 0)
+    { // normal joint
         file >> text;
+        if (file.eof()||text=="OFFSET"||text=="CHANNELS"||text=="JOINT"||text=="End"||text=="MOTION")
+        {
+            e.msg="no joint name";
+            e.code=1201;
+            temp.e=e;
+            return temp;
+        }
         id++;
         t_j.id = id;
 
@@ -154,6 +255,13 @@ ret_r_j Data::create_joint_bvh(string parent, hierarchy_bvh &hierarchy, fstream&
         while (text != "OFFSET" && file.eof() != true)
         {
             file >> text;
+            if (file.eof()||text=="CHANNELS"||text=="JOINT"||text=="End"||text=="MOTION")
+            {
+                e.msg="no joint offset tag";
+                e.code=1202;
+                temp.e=e;
+                return temp;
+            }
 
         }
         for (int i = 0; i < 3; i++)
@@ -165,6 +273,13 @@ ret_r_j Data::create_joint_bvh(string parent, hierarchy_bvh &hierarchy, fstream&
         while (text != "CHANNELS" && file.eof() != true)
         {
             file >> text;
+            if (file.eof()||text=="JOINT"||text=="End"||text=="MOTION")
+            {
+                e.msg="no joint channels tag";
+                e.code=1203;
+                temp.e=e;
+                return temp;
+            }
 
         }
         file >> num;
@@ -179,6 +294,13 @@ ret_r_j Data::create_joint_bvh(string parent, hierarchy_bvh &hierarchy, fstream&
         while (text != "MOTION" && file.eof() != true)
         {
             file >> text;
+            if (file.eof())
+            {
+                e.msg="no motion tag";
+                e.code=1204;
+                temp.e=e;
+                return temp;
+            }
             if (text == "JOINT")
             {
                 temp2 = create_joint_bvh(t_j.name, temp.hierarchy, file, id,0,text);
@@ -214,6 +336,13 @@ ret_r_j Data::create_joint_bvh(string parent, hierarchy_bvh &hierarchy, fstream&
             while (text != "OFFSET" && file.eof() != true)
             {
                 file >> text;
+                if (file.eof()||text=="CHANNELS"||text=="JOINT"||text=="End"||text=="MOTION")
+                {
+                    e.msg="no end_site offset tag";
+                    e.code=1205;
+                    temp.e=e;
+                    return temp;
+                }
 
             }
             for (int i = 0; i < 3; i++)
@@ -237,12 +366,19 @@ frames_data Data::create_frames_bvh(hierarchy_bvh &h_bvh, fstream& file, string 
     //int stuff;
     double num;
     joint_data j_d;
-
+    error e;
 
 
     while (text != "Frames:" && file.eof() != true)
     {
         file >> text;
+        if (file.eof()||text=="Frame")
+        {
+            e.msg="no Frames tag";
+            e.code=1301;
+            f_data.e=e;
+            return f_data;
+        }
 
     }
     file >> f_data.frames_count;
@@ -250,7 +386,13 @@ frames_data Data::create_frames_bvh(hierarchy_bvh &h_bvh, fstream& file, string 
     while (text != "Frame" && file.eof() != true)
     {
         file >> text;
-
+        if (file.eof() )
+        {
+            e.msg="no Frame time tag";
+            e.code=1302;
+            f_data.e=e;
+            return f_data;
+        }
     }
     file >> text;
     file >> f_data.frame_time;
@@ -442,8 +584,8 @@ void Data::write_joint_bvh(ofstream& file, hierarchy_bvh &h_bvh, int id) {
 void Data:: write_frames_asf(ofstream& file, hierarchy_asf &h_asf, frames_data &f_asf) {
 
 
-    file << ":FULLY - SPECIFIED" << "\n";
-    file << ":DEGREES" ;
+    file << ":FULLY-SPECIFIED";
+    //file << ":DEGREES" ;
     for (int i = 0; i < f_asf.frames.size(); i++)
     {
         file<< "\n" << i+1 ;
@@ -496,7 +638,14 @@ void Data:: write_asf(ofstream& file, hierarchy_asf &h_asf, frames_data &f_asf) 
     file << ":units " << "\n";
     file << "mass " << h_asf.info.mass << "\n";
     file << "length " << h_asf.info.length << "\n";
-    file << "angle " << h_asf.info.angle << "\n";
+    if(h_asf.info.angle)
+        {
+            file << "angle " << "deg " << "\n";
+        }
+        else
+            {
+                file << "angle " << "rad " << "\n";
+            }
     file << ":root" << "\n";
     file << "\t";
     file << "order ";
@@ -607,105 +756,102 @@ void Data:: write_asf(ofstream& file, hierarchy_asf &h_asf, frames_data &f_asf) 
 }
 
 
-return_bvh Data::asf_to_bvh(hierarchy_asf &h_asf, frames_data &f_asf) { ///funkcja od konwersji asf do bvh
-    hierarchy_bvh h_bvh;
-    frames_data f_bvh;
-    return_bvh r_bvh;
+//return_bvh Data::asf_to_bvh(hierarchy_asf &h_asf, frames_data &f_asf) { ///funkcja od konwersji asf do bvh
+//    hierarchy_bvh h_bvh;
+//    frames_data f_bvh;
+//    return_bvh r_bvh;
 
 
-    h_bvh.root.children = h_asf.root.children;
-    h_bvh.root.id = h_asf.root.id;
-    h_bvh.root.name = h_asf.root.name;
-   // h_bvh.root.channel_names = h_asf.root.order;
-    h_bvh.root.start_cords = h_asf.root.position;
-    h_bvh.root.channel_count = h_asf.root.order.size();
-    for (int i = 0; i < h_asf.root.order.size(); ++i)
-    {
-        if (h_asf.root.order[i]=="TX")
-        {
-           h_bvh.root.channel_names.push_back("Xposition");
-        }
-        else
-        {
-            if (h_asf.root.order[i]=="TY")
-            {
-                h_bvh.root.channel_names.push_back("Yposition");
-            }
-            else
-            {
-                if (h_asf.root.order[i]=="TZ")
-                {
-                    h_bvh.root.channel_names.push_back("Zposition");
-                }
-                else
-                {
-                    if (h_asf.root.order[i]=="RX")
-                    {
-                        h_bvh.root.channel_names.push_back("Xrotation");
-                    }
-                    else
-                    {
-                        if (h_asf.root.order[i]=="RY")
-                        {
-                            h_bvh.root.channel_names.push_back("Yrotation");
-                        }
-                        else
-                        {
-                            if (h_asf.root.order[i]=="RZ")
-                            {
-                                h_bvh.root.channel_names.push_back("Zrotation");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-}
-    for (int i = 1; i < h_asf.joints.size(); i++)
-    {
-        joint_bvh j_bvh;
-        j_bvh.children = h_asf.joints[i].children;
-        j_bvh.channel_count = h_asf.joints[i].dof.size();
-        j_bvh.name = h_asf.joints[i].name;
-        j_bvh.id = h_asf.joints[i].id;
-        j_bvh.parent = h_asf.joints[i].parent;
-        j_bvh.channel_count=h_asf.joints[i].dof.size();
-
-
-
-        for (int j = 0; j < h_asf.joints[i].direction.size(); j++)
-        {
-            j_bvh.offset.push_back(h_asf.joints[i].direction[j] * h_asf.joints[i].length);
-        }
-
-        //j_bvh.channels = h_asf.joints[i].dof;
-
-        for (int k = 0; k < h_asf.joints[i].dof.size(); ++k)
-        {
-            if (h_asf.joints[i].dof[k]=="rx")
-            {
-                j_bvh.channels.push_back("Xrotation");
-            }
-            else
-            {
-
-                if (h_asf.joints[i].dof[k]=="ry")
-                {
-                    j_bvh.channels.push_back("Yrotation");
-                }
-                else
-                {
-
-                    if (h_asf.joints[i].dof[k]=="rz")
-                    {
-                        j_bvh.channels.push_back("Zrotation");
-                    }
-                }
-            }
-        }
+//    h_bvh.root.children = h_asf.root.children;
+//    h_bvh.root.id = h_asf.root.id;
+//    h_bvh.root.name = h_asf.root.name;
+//   // h_bvh.root.channel_names = h_asf.root.order;
+//    h_bvh.root.start_cords = h_asf.root.position;
+//    h_bvh.root.channel_count = h_asf.root.order.size();
+//    for (int i = 0; i < h_asf.root.order.size(); ++i)
+//    {
+//        if (h_asf.root.order[i]=="TX")
+//        {
+//           h_bvh.root.channel_names.push_back("Xposition");
+//        }
+//        else
+//        {
+//            if (h_asf.root.order[i]=="TY")
+//            {
+//                h_bvh.root.channel_names.push_back("Yposition");
+//            }
+//            else
+//            {
+//                if (h_asf.root.order[i]=="TZ")
+//                {
+//                    h_bvh.root.channel_names.push_back("Zposition");
+//                }
+//                else
+//                {
+//                    if (h_asf.root.order[i]=="RX")
+//                    {
+//                        h_bvh.root.channel_names.push_back("Xrotation");
+//                    }
+//                    else
+//                    {
+//                        if (h_asf.root.order[i]=="RY")
+//                        {
+//                            h_bvh.root.channel_names.push_back("Yrotation");
+//                        }
+//                        else
+//                        {
+//                            if (h_asf.root.order[i]=="RZ")
+//                            {
+//                                h_bvh.root.channel_names.push_back("Zrotation");
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//}
+//    for (int i = 1; i < h_asf.joints.size(); i++)
+//    {
+//        joint_bvh j_bvh;
+//        j_bvh.children = h_asf.joints[i].children;
+//        j_bvh.channel_count = h_asf.joints[i].dof.size();
+//        j_bvh.name = h_asf.joints[i].name;
+//        j_bvh.id = h_asf.joints[i].id;
+//        j_bvh.parent = h_asf.joints[i].parent;
+//        j_bvh.channel_count=h_asf.joints[i].dof.size();
 
 
 
+//        for (int j = 0; j < h_asf.joints[i].direction.size(); j++)
+//        {
+//            j_bvh.offset.push_back(h_asf.joints[i].direction[j] * h_asf.joints[i].length);
+//        }
+
+//        //j_bvh.channels = h_asf.joints[i].dof;
+
+//        for (int k = 0; k < h_asf.joints[i].dof.size(); ++k)
+//        {
+//            if (h_asf.joints[i].dof[k]=="rx")
+//            {
+//                j_bvh.channels.push_back("Xrotation");
+//            }
+//            else
+//            {
+
+//                if (h_asf.joints[i].dof[k]=="ry")
+//                {
+//                    j_bvh.channels.push_back("Yrotation");
+//                }
+//                else
+//                {
+
+//                    if (h_asf.joints[i].dof[k]=="rz")
+//                    {
+//                        j_bvh.channels.push_back("Zrotation");
+//                    }
+//                }
+//            }
+//        }
 
 
 
@@ -714,156 +860,159 @@ return_bvh Data::asf_to_bvh(hierarchy_asf &h_asf, frames_data &f_asf) { ///funkc
 
 
 
-        h_bvh.joints.push_back(j_bvh);
-
-    }
-    f_bvh=f_asf;
-
-f_bvh.frame_time=0.04;
-r_bvh.f_bvh=f_bvh;
-r_bvh.h_bvh=h_bvh;
-return r_bvh;
-}
 
 
 
-return_asf Data::bvh_to_asf(hierarchy_bvh &h_bvh, frames_data &f_bvh) { ///konwersja bvh do asf
+//        h_bvh.joints.push_back(j_bvh);
 
-    hierarchy_asf h_asf;
-    frames_data f_asf;
-    return_asf r_asf;
-    h_asf.info.angle="deg";
-    h_asf.info.length=1;
-    h_asf.info.mass=1.0;
-    h_asf.info.name="name";
-    h_asf.info.version="0.0";
-    h_asf.root.children = h_bvh.root.children;
-    h_asf.root.id = h_bvh.root.id;
-    h_asf.root.name = h_bvh.root.name;
-    h_asf.root.parent = h_bvh.root.parent;
+//    }
+//    f_bvh=f_asf;
 
-    for (int i = 0; i < h_bvh.root.channel_names.size(); i++)
-    { qDebug()<<"root channel\n";
-        string text;
-        //double a = h_bvh.root.start_cords[i];
-        text = h_bvh.root.channel_names[i];
-        if (text=="Xposition")
-        {
-            h_asf.root.order.push_back("TX");
-            h_asf.root.position.push_back(h_bvh.root.start_cords[i]);
-        }
-        else
-        {
-            if (text == "Zposition")
-            {
-                h_asf.root.order.push_back("TZ");
-                h_asf.root.position.push_back(h_bvh.root.start_cords[i]);
-            }
-            else
-            {
-                if (text == "Yposition")
-                {
-                    h_asf.root.order.push_back("TY");
-                    h_asf.root.position.push_back(h_bvh.root.start_cords[i]);
-                }
-                else
-                {
-                    if (text == "Zrotation")
-                    {
-                        h_asf.root.order.push_back("RZ");
-                        h_asf.root.orientation.push_back(0);
-                        h_asf.root.axis.push_back('Z');
-                    }
-                    else
-                    {
-                        if (text == "Xrotation")
-                        {
-                            h_asf.root.order.push_back("RX");
-                            h_asf.root.orientation.push_back(0);
-                            h_asf.root.axis.push_back('X');
-                        }
-                        else
-                        {
-                            if (text == "Yrotation")
-                            {
-                                h_asf.root.order.push_back("RY");
-                                h_asf.root.orientation.push_back(0);
-                                h_asf.root.axis.push_back('Y');
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < h_bvh.joints.size(); i++)
-    { qDebug()<<"joint start\n";
-        joint_asf j_asf;
-        j_asf.name = h_bvh.joints[i].name;
-        j_asf.id = h_bvh.joints[i].id;
-        j_asf.children = h_bvh.joints[i].children;
-        j_asf.parent = h_bvh.joints[i].parent;
-        j_asf.axis={0,0,0};
-        j_asf.axis_order=h_asf.root.axis;
+//f_bvh.frame_time=0.04;
+//r_bvh.f_bvh=f_bvh;
+//r_bvh.h_bvh=h_bvh;
+//return r_bvh;
+//}
 
 
-        j_asf.length = sqrt(h_bvh.joints[i].offset[0]* h_bvh.joints[i].offset[0] + h_bvh.joints[i].offset[1]* h_bvh.joints[i].offset[1]+ h_bvh.joints[i].offset[2]* h_bvh.joints[i].offset[2]);
-        for (int j = 0; j < h_bvh.joints[i].offset.size(); j++)
-        { qDebug()<<"offset\n";
-            j_asf.direction.push_back(h_bvh.joints[i].offset[j] / j_asf.length);
 
-        }
-        for (int j = 0; j < h_bvh.joints[i].channels.size(); j++)
-        { qDebug()<<"start\n";
-            string text;
+//return_asf Data::bvh_to_asf(hierarchy_bvh &h_bvh, frames_data &f_bvh) { ///konwersja bvh do asf
 
-            text = h_bvh.joints[i].channels[j];
-            if (text == "Zrotation")
-            {
+//    hierarchy_asf h_asf;
+//    frames_data f_asf;
+//    return_asf r_asf;
+//    h_asf.info.angle="deg";
+//    h_asf.info.length=1;
+//    h_asf.info.mass=1.0;
+//    h_asf.info.name="name";
+//    h_asf.info.version="0.0";
+//    h_asf.root.children = h_bvh.root.children;
+//    h_asf.root.id = h_bvh.root.id;
+//    h_asf.root.name = h_bvh.root.name;
+//    h_asf.root.parent = h_bvh.root.parent;
 
-                j_asf.dof.push_back("rz");
-                j_asf.limits.push_back(-180);
-                j_asf.limits.push_back(180);
-            }
-            else
-            {
-                if (text == "Xrotation")
-                {
-                    j_asf.dof.push_back("rx");
-                    j_asf.limits.push_back(-180);
-                    j_asf.limits.push_back(180);
-                }
-                else
-                {
-                    if (text == "Yrotation")
-                    {
-                    j_asf.dof.push_back("ry");
-                    j_asf.limits.push_back(-180);
-                    j_asf.limits.push_back(180);
-                    }
-                }
-            }
-        }
+//    for (int i = 0; i < h_bvh.root.channel_names.size(); i++)
+//    { qDebug()<<"root channel\n";
+//        string text;
+//        //double a = h_bvh.root.start_cords[i];
+//        text = h_bvh.root.channel_names[i];
+//        if (text=="Xposition")
+//        {
+//            h_asf.root.order.push_back("TX");
+//            h_asf.root.position.push_back(h_bvh.root.start_cords[i]);
+//        }
+//        else
+//        {
+//            if (text == "Zposition")
+//            {
+//                h_asf.root.order.push_back("TZ");
+//                h_asf.root.position.push_back(h_bvh.root.start_cords[i]);
+//            }
+//            else
+//            {
+//                if (text == "Yposition")
+//                {
+//                    h_asf.root.order.push_back("TY");
+//                    h_asf.root.position.push_back(h_bvh.root.start_cords[i]);
+//                }
+//                else
+//                {
+//                    if (text == "Zrotation")
+//                    {
+//                        h_asf.root.order.push_back("RZ");
+//                        h_asf.root.orientation.push_back(0);
+//                        h_asf.root.axis.push_back('Z');
+//                    }
+//                    else
+//                    {
+//                        if (text == "Xrotation")
+//                        {
+//                            h_asf.root.order.push_back("RX");
+//                            h_asf.root.orientation.push_back(0);
+//                            h_asf.root.axis.push_back('X');
+//                        }
+//                        else
+//                        {
+//                            if (text == "Yrotation")
+//                            {
+//                                h_asf.root.order.push_back("RY");
+//                                h_asf.root.orientation.push_back(0);
+//                                h_asf.root.axis.push_back('Y');
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-    h_asf.joints.push_back(j_asf);
-    //int size=h_asf.joints.size();
-    }
+//    for (int i = 0; i < h_bvh.joints.size(); i++)
+//    { qDebug()<<"joint start\n";
+//        joint_asf j_asf;
+//        j_asf.name = h_bvh.joints[i].name;
+//        j_asf.id = h_bvh.joints[i].id;
+//        j_asf.children = h_bvh.joints[i].children;
+//        j_asf.parent = h_bvh.joints[i].parent;
+//        j_asf.axis={0,0,0};
+//        j_asf.axis_order=h_asf.root.axis;
 
-    for (int i = 0; i < h_asf.joints.size(); ++i)
-    {
-        string name=h_asf.joints[i].name;
-        i=i;
-    }
-    f_asf = f_bvh;
-    for (int i = 0; i < f_asf.frames.size(); ++i)
-    {
-        f_asf.frames[i].channel_data[0].name=h_asf.joints[0].name;
-    }
-  r_asf.f_amc=f_asf;
-  r_asf.h_asf=h_asf;
-  return r_asf;
-}
+
+//        j_asf.length = sqrt(h_bvh.joints[i].offset[0]* h_bvh.joints[i].offset[0] + h_bvh.joints[i].offset[1]* h_bvh.joints[i].offset[1]+ h_bvh.joints[i].offset[2]* h_bvh.joints[i].offset[2]);
+//        for (int j = 0; j < h_bvh.joints[i].offset.size(); j++)
+//        { qDebug()<<"offset\n";
+//            j_asf.direction.push_back(h_bvh.joints[i].offset[j] / j_asf.length);
+
+//        }
+//        for (int j = 0; j < h_bvh.joints[i].channels.size(); j++)
+//        { qDebug()<<"start\n";
+//            string text;
+
+//            text = h_bvh.joints[i].channels[j];
+//            if (text == "Zrotation")
+//            {
+
+//                j_asf.dof.push_back("rz");
+//                j_asf.limits.push_back(-180);
+//                j_asf.limits.push_back(180);
+//            }
+//            else
+//            {
+//                if (text == "Xrotation")
+//                {
+//                    j_asf.dof.push_back("rx");
+//                    j_asf.limits.push_back(-180);
+//                    j_asf.limits.push_back(180);
+//                }
+//                else
+//                {
+//                    if (text == "Yrotation")
+//                    {
+//                    j_asf.dof.push_back("ry");
+//                    j_asf.limits.push_back(-180);
+//                    j_asf.limits.push_back(180);
+//                    }
+//                }
+//            }
+//        }
+
+//    h_asf.joints.push_back(j_asf);
+//    //int size=h_asf.joints.size();
+//    }
+
+//    for (int i = 0; i < h_asf.joints.size(); ++i)
+//    {
+//        string name=h_asf.joints[i].name;
+//        i=i;
+//    }
+//    f_asf = f_bvh;
+//    for (int i = 0; i < f_asf.frames.size(); ++i)
+//    {
+//        f_asf.frames[i].channel_data[0].name=h_asf.joints[0].name;
+//    }
+//  r_asf.f_amc=f_asf;
+//  r_asf.h_asf=h_asf;
+//  return r_asf;
+//}
 
 return_asf Data::bvh_to_asf_conversion(hierarchy_bvh &h_bvh, frames_data &f_bvh)
 {
@@ -876,7 +1025,7 @@ return_asf Data::bvh_to_asf_conversion(hierarchy_bvh &h_bvh, frames_data &f_bvh)
     vector <string> root_channels;
     vector <char> axis;
     string order;
-    for (int i = 0; i < h_bvh.joints[0].channels.size(); ++i) ///dopisac przypisania dla root;
+    for (int i = 0; i < h_bvh.joints[0].channels.size(); ++i)
     {
         if (h_bvh.joints[0].channels[i]=="Xrotation")
         {
@@ -1006,20 +1155,20 @@ return_asf Data::bvh_to_asf_conversion(hierarchy_bvh &h_bvh, frames_data &f_bvh)
                     {
                         if (root_channels[l]=="RX")
                         {
-                            channel_data_root.channels.push_back(ang.x);
-                            //channel_data_root.channels.push_back(0);
+                            //channel_data_root.channels.push_back(ang.x);
+                            channel_data_root.channels.push_back(0);
                         }
                         else
                             if (root_channels[l]=="RY")
                             {
-                                channel_data_root.channels.push_back(ang.y);
-                                //channel_data_root.channels.push_back(0);
+                                //channel_data_root.channels.push_back(ang.y);
+                                channel_data_root.channels.push_back(0);
                             }
                             else
                                 if (root_channels[l]=="RZ")
                                 {
-                                    channel_data_root.channels.push_back(ang.z);
-                                    //channel_data_root.channels.push_back(0);
+                                    //channel_data_root.channels.push_back(ang.z);
+                                    channel_data_root.channels.push_back(0);
                                 }
                                 else
                                     if (root_channels[l]=="TX")
@@ -1054,7 +1203,7 @@ return_asf Data::bvh_to_asf_conversion(hierarchy_bvh &h_bvh, frames_data &f_bvh)
 
                         mat= joint_matrix*inv_parent_matrix;
 
-                        mat=mat.transposed();
+                       // mat=mat.transposed();
 
                         ang=calc_matrix_3_rot(mat,order);
 
@@ -1096,39 +1245,49 @@ return_asf Data::bvh_to_asf_conversion(hierarchy_bvh &h_bvh, frames_data &f_bvh)
     return r_asf;
 }
 
-return_bvh Data::asf_to_bvh_conversion(hierarchy_asf &h_asf, frames_data &f_amc)
+return_bvh_hierarchy_motion Data::asf_to_bvh_conversion(hierarchy_asf &h_asf, frames_data &f_amc)
 {
-    return_bvh ret_bvh;
+    return_bvh_hierarchy_motion ret_bvh;
     hierarchy_bvh h_bvh;
     frames_data f_bvh;
 
     //order
     vector<string> root_order;
     vector<string> joint_order;
+    vector<string> axis;
     string order;
-    for (int i = 0; i < h_asf.joints[0].dof.size(); ++i)
+
+
+
+    for (int a = 0; a < h_asf.joints[0].axis_order.size(); ++a)
     {
-        if (h_asf.joints[0].dof[i]=="RX")
+        if (h_asf.joints[0].axis_order[a]=='X')
         {
             root_order.push_back("Xrotation");
             joint_order.push_back("Xrotation");
             order.append("X");
         }
         else
-            if (h_asf.joints[0].dof[i]=="RY")
+            if (h_asf.joints[0].axis_order[a]=='Y')
             {
                 root_order.push_back("Yrotation");
                 joint_order.push_back("Yrotation");
                 order.append("Y");
             }
             else
-                if (h_asf.joints[0].dof[i]=="RZ")
+                if (h_asf.joints[0].axis_order[a]=='Z')
                 {
                     root_order.push_back("Zrotation");
                     joint_order.push_back("Zrotation");
                     order.append("Z");
                 }
-                else
+
+
+
+    }
+    for (int i = 0; i < h_asf.joints[0].dof.size(); ++i)
+    {
+
                     if (h_asf.joints[0].dof[i]=="TX")
                     {
                         root_order.push_back("Xposition");
@@ -1144,7 +1303,6 @@ return_bvh Data::asf_to_bvh_conversion(hierarchy_asf &h_asf, frames_data &f_amc)
                                 root_order.push_back("Zposition");
                             }
     }
-
 
     for (int i = 0; i < h_asf.joints.size(); ++i)
     {
@@ -1332,23 +1490,23 @@ frames_data Data::create_frames_asf(fstream& file,hierarchy_asf &h) { ///wczytan
 
     for (int x = 0; x < h.joints.size();x++)
     {
-        qDebug()<<"create_frames_asf joints\n";
+        //qDebug()<<"create_frames_asf joints\n";
         if (h.joints[x].dof.size() != 0)
         {
             t++;
         }
     }
 
-    while (text!=":FULLY-SPECIFIED"&&text!=":fully-specified ")
+    while (text!=":FULLY-SPECIFIED"&&text!=":fully-specified "&&text!=":DEGREES")
     {
-        qDebug()<<"deg\n";
+        //qDebug()<<"deg\n";
         file >> text;
 
     }
 
     while (!file.eof())
     {
-        qDebug()<<"eof\n";
+        //qDebug()<<"eof\n";
         file >> i;
         getline(file, text);
         if (file.eof())
@@ -1356,7 +1514,7 @@ frames_data Data::create_frames_asf(fstream& file,hierarchy_asf &h) { ///wczytan
             return f_asf;
         }
 
-        qDebug()<<QString::number(i);
+        //qDebug()<<QString::number(i);
         for (int y = 0; y < t; y++) //ilość joint z istnejącymi dof
         {
             //qDebug()<<"joint z dof\n";
@@ -1390,23 +1548,25 @@ frames_data Data::create_frames_asf(fstream& file,hierarchy_asf &h) { ///wczytan
 
     return f_asf;
 }
-hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
+return_asf_hierarchy_and_error Data::create_asf(fstream& file) {	/// hierarchia asf
     string text;
     istringstream string_buf;
-    hierarchy_asf h_asf;
+    return_asf_hierarchy_and_error h_asf;
     double temp_d;
     int r=0;
     info_asf inf;
     root_asf root;
-    joint_asf joint;
+    return_joint_asf joint;
     joint_asf t_joint;
     string temp_string;
     bool root_fl=false;
     bool bone_fl=false;
     bool hierarchy_fl=false;
+    error e;
+
     while (!file.eof())
     {
-        qDebug()<<"create_asf\n";
+        //qDebug()<<"create_asf\n";
         if ((!bone_fl)&&(!root_fl)&&(!hierarchy_fl))
         {
             file >> text;
@@ -1454,17 +1614,22 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
         {
             r=6;
         }
-        switch (r)
-        {
+        switch (r){
+
         case 1:
+        {
             file >> text;
-            h_asf.info.version= text;
+           h_asf. h_asf.info.version= text;
             break;
+        }
         case 2:
+        {
             file >> text;
-            h_asf.info.name = text;
+            h_asf.h_asf.info.name = text;
             break;
+        }
         case 3:
+        {
             while (text!=":root")
             {
                 file >> text;
@@ -1472,29 +1637,33 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                 if (text == "mass")
                 {
                     file >> temp_d;
-                    h_asf.info.mass = temp_d;
+                    h_asf.h_asf.info.mass = temp_d;
                 }
                 if (text == "length")
                 {
                     file >> temp_d;
-                    h_asf.info.length = temp_d;
+                    h_asf.h_asf.info.length = temp_d;
                 }
                 if (text == "angle")
                 {
                     file >> text;
                     if (text=="deg")
                     {
-                        h_asf.info.angle=true;
+                        h_asf.h_asf.info.angle=true;
                     }
                     else
-                        h_asf.info.angle=false;
+                        h_asf.h_asf.info.angle=false;
                 }
             }
             root_fl=true;
             break;
+        }
         case 4:
+        {
+            bool order=false,position=false,orientation=false,axis=false;
             while (text != ":bonedata")
             {
+
                 file >> text;
 
                 if (text == "order")
@@ -1506,6 +1675,7 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                         //qDebug()<<"create_asf_order\n";
                         root.order.push_back(word);
                     }
+                    order=true;
                 }
 
                 if (text == "position")
@@ -1518,6 +1688,7 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                         root.position.push_back(temp);
 
                     }
+                    position=true;
                  }
 
                 if (text == "orientation")
@@ -1529,6 +1700,7 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                         //qDebug()<<"create_asf_orientation\n";
                         root.orientation.push_back(temp);
                     }
+                    orientation=true;
                  }
 
                 if (text == "axis")
@@ -1540,31 +1712,59 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                         //qDebug()<<"create_asf_axis\n";
                         root.axis.push_back(temp);
                     }
+                    axis=true;
                 }
             }
 
 
+            if (!order)
+            {
+                e.msg="no order in root";
+                e.code=1001;
+                h_asf.exception=e;
+                return h_asf;
+            }
+            if (!position)
+            {
+                e.msg="no position in root";
+                e.code=1002;
+                h_asf.exception=e;
+                return h_asf;
+            }
+            if (!orientation)
+            {
+                e.msg="no orientation in root";
+                e.code=1003;
+                h_asf.exception=e;
+                return h_asf;
+            }
+            if (!axis)
+            {
+                e.msg="no axis in root";
+                e.code=1004;
+                h_asf.exception=e;
+                return h_asf;
+            }
+
             root.name = "root";
-            h_asf.root = root;
+            h_asf.h_asf.root = root;
 
             t_joint.id = 0;
             t_joint.name = "root";
-            t_joint.dof = h_asf.root.order;
-//            for (int o=0;h_asf.root.order;o++) { //ujednolicenie nazewnictwa stopni sfobody
+            t_joint.dof = h_asf.h_asf.root.order;
 
-//            }
             t_joint.length=0;
             t_joint.direction=root.position;
             t_joint.axis_order=root.axis;
             t_joint.axis=root.orientation;
             t_joint.parent_index_joint=0;
 
-            h_asf.joints.push_back(t_joint);
+            h_asf.h_asf.joints.push_back(t_joint);
 
             root_fl=false;
             bone_fl=true;
             break;
-
+        }
         case 5:
             while (text!=":hierarchy")
             {
@@ -1573,11 +1773,24 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                 {
                     //qDebug()<<"create_asf_begin_joint\n";
                     joint = create_joints_asf(file);
-                    h_asf.joints.push_back(joint);
+                    if (joint.exception.code!=0)
+                    {
+                        h_asf.exception=joint.exception;
+                        return h_asf;
+                    }
+                    h_asf.h_asf.joints.push_back(joint.joint);
+                }
+                if(file.eof())
+                {
+                    e.msg="no hierarchy found";
+                    e.code=1005;
+                    h_asf.exception=e;
+                    return h_asf;
                 }
             }
             bone_fl=false;
             hierarchy_fl=true;
+
             break;
         case 6:
             while (text != "begin")
@@ -1607,24 +1820,24 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                     {
                         for (string temp; string_buf >> temp;)
                         {   //qDebug()<<"create_asf_root\n";
-                            h_asf.root.children.push_back(temp);
-                            for (int i = 1; i < h_asf.joints.size(); i++) //nie sprawdzać zerowego bo tam jest dummy root // to jest zapis nazwy parent w joint child.
+                            h_asf.h_asf.root.children.push_back(temp);
+                            for (int i = 1; i < h_asf.h_asf.joints.size(); i++) //nie sprawdzać zerowego bo tam jest dummy root // to jest zapis nazwy parent w joint child.
                             {
                                 //qDebug()<<"create_asf_roo_joint\n";
-                                if (h_asf.joints[i].name==temp)
+                                if (h_asf.h_asf.joints[i].name==temp)
                                 {
-                                    h_asf.joints[i].parent = parent_name;
+                                    h_asf.h_asf.joints[i].parent = parent_name;
                                     break;
                                 }
 
                             }
                         }
-                        h_asf.joints[0].children=h_asf.root.children;
+                        h_asf.h_asf.joints[0].children=h_asf.h_asf.root.children;
                     }
                     else
                     {
                         int i = 0;
-                        while (h_asf.joints[i].name!=parent_name)
+                        while (h_asf.h_asf.joints[i].name!=parent_name)
                         {
                             //qDebug()<<"create_asf_parent\n";
                             i++;
@@ -1632,14 +1845,14 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
                         for (string temp; string_buf >> temp;)
                         {
                             //qDebug()<<"create_asf_child\n";
-                            h_asf.joints[i].children.push_back(temp);
-                            for (int j = 1; j < h_asf.joints.size(); j++) //nie sprawdzać zerowego bo tam jest dummy root // to jest zapis nazwy parent w joint child.
+                            h_asf.h_asf.joints[i].children.push_back(temp);
+                            for (int j = 1; j < h_asf.h_asf.joints.size(); j++) //nie sprawdzać zerowego bo tam jest dummy root // to jest zapis nazwy parent w joint child.
                             {
                                 //qDebug()<<"create_asf_child_joint\n";
                                 //string lol =h_asf.joints[j].name;
-                                if (h_asf.joints[j].name == temp)
+                                if (h_asf.h_asf.joints[j].name == temp)
                                 {
-                                    h_asf.joints[j].parent = parent_name;
+                                    h_asf.h_asf.joints[j].parent = parent_name;
                                     break;
 
 
@@ -1655,19 +1868,24 @@ hierarchy_asf Data::create_asf(fstream& file) {	/// hierarchia asf
 
         default:
             break;
-        }
+
     }
+}
 
-
-    qDebug()<<QString::fromStdString(h_asf.root.name);
+    //qDebug()<<QString::fromStdString(h_asf.root.name);
     return h_asf;
     }
-joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
+
+return_joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
     
+    return_joint_asf ret;
     string text;
     istringstream string_buf;
     joint_asf joint;
+    error e;
     double temp_d;
+    bool id=false,name=false,direction=false,axis=false,lenght=false;
+
 
         while (text != "end")
         {
@@ -1681,6 +1899,7 @@ joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
                 {
                     joint.id = temp;
                 }
+                id=true;
             }
             else
             {
@@ -1692,6 +1911,7 @@ joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
                     {
                         joint.name = temp;
                     }
+                    name=true;
                 }
                 else
                 {
@@ -1703,6 +1923,7 @@ joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
                         {
                             joint.direction.push_back(temp);
                         }
+                        direction=true;
                     }
                     else
                     {
@@ -1714,6 +1935,7 @@ joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
                             {
                                 joint.length=temp;
                             }
+                            lenght=true;
                         }
                         else
                         {
@@ -1731,6 +1953,7 @@ joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
                                 {
                                     joint.axis_order.push_back(temp);
                                 }
+                                axis=true;
 
 
                             }
@@ -1745,19 +1968,23 @@ joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
                                         joint.dof.push_back(temp);
 
                                     }
-                                    while (text != "limits")
-                                    {
-                                        file >> text;
-                                    }
-                                    for (int i = 0; i < joint.dof.size()*2; i++)
-                                    {
-                                        file >> text;
-                                        QString t = QString::fromStdString(text);
-                                        t.remove(QChar('('),Qt::CaseInsensitive);
-                                        t.remove(QChar(')'),Qt::CaseInsensitive);
-                                        joint.limits.push_back((t.toDouble()));
-                                        //qDebug() << t;
 
+                                }
+                                else
+                                {
+                                    if(text == "limits")
+                                    {
+
+                                        for (int i = 0; i < joint.dof.size()*2; i++)
+                                        {
+                                            file >> text;
+                                            QString t = QString::fromStdString(text);
+                                            t.remove(QChar('('),Qt::CaseInsensitive);
+                                            t.remove(QChar(')'),Qt::CaseInsensitive);
+                                            joint.limits.push_back((t.toDouble()));
+                                            //qDebug() << t;
+
+                                        }
                                     }
                                 }
                             }
@@ -1766,15 +1993,48 @@ joint_asf Data::create_joints_asf(fstream& file) { ///joint dla asf
                 }
             }
         }
+                ret.joint=joint;
+        if (id==false)
+        {
+              ret.exception.code= 1101;
+              ret.exception.msg="no id found";
+              return ret;
+        }
+        if (name==false)
+        {
+              ret.exception.code= 1102;
+              ret.exception.msg="no name found";
+              return ret;
+        }
+        if (direction==false)
+        {
+              ret.exception.code= 1103;
+              ret.exception.msg="no direction found";
+              return ret;
+        }
+        if (lenght==false)
+        {
+              ret.exception.code= 1104;
+              ret.exception.msg="no lenght found";
+              return ret;
+        }
+        if (axis==false)
+        {
+              ret.exception.code= 1105;
+              ret.exception.msg="no axis found";
+              return ret;
+        }
 
-    return joint;
+        id=false,name=false,direction=false,axis=false,lenght=false;
+
+    return ret;
 
 }
 
 
 angles Data::calc_matrix_3_rot(QMatrix4x4 matrix, string order)
 {
-    float tab[4][4];
+    float mat[4][4];
     angles ang;
     double thetaX=0;
     double thetaY=0;
@@ -1783,116 +2043,112 @@ angles Data::calc_matrix_3_rot(QMatrix4x4 matrix, string order)
         for (int i = 0; i < 4; ++i)
         {
             QVector4D vect=matrix.row(i);
-            tab[i][0]=vect.x();
-            tab[i][1]=vect.y();
-            tab[i][2]=vect.z();
-            tab[i][3]=vect.w();
+            mat[i][0]=vect.x();
+            mat[i][1]=vect.y();
+            mat[i][2]=vect.z();
+            mat[i][3]=vect.w();
         }
 
         if(order=="XYZ")
         {
-            if (tab[0][2] < 1)
+            if (mat[0][2] < 1)
             {
-                if (tab[0][2] > -1)
+                if (mat[0][2] > -1)
                 {
-                thetaY = asin(tab[0][2]);
-                thetaX = atan2(-tab[1][2],tab[2][2]);
-                thetaZ = atan2(-tab[0][1],tab[0][0]);
+                    thetaY = asin(mat[0][2]);
+                    thetaX = atan2(-mat[1][2],mat[2][2]);
+                    thetaZ = atan2(-mat[0][1],mat[0][0]);
                 }
+                    else
+                    {
+                        thetaY = -PI/2;
+                        thetaX = -atan2(mat[1][0],mat[1][1]);
+                        thetaZ = 0;
+                    }
+            }
                 else
-
                 {
-
-                thetaY = -PI/2;
-                thetaX = -atan2(tab[1][0],tab[1][1]);
-                thetaZ = 0;
+                    thetaY = +PI/2;
+                    thetaX = atan2(mat[1][0],mat[1][1]);
+                    thetaZ = 0;
                 }
-            }
-            else
-            {
-
-            thetaY = +PI/2;
-            thetaX = atan2(tab[1][0],tab[1][1]);
-            thetaZ = 0;
-            }
         }
         else
         {
             if (order=="XZY")
             {
-                if (tab[0][1] < +1)
+                if (mat[0][1] < +1)
                 {
-                if (tab[0][1] > -1)
-                {
-                thetaZ = asin(-tab[0][1]);
-                thetaX = atan2(tab[2][1],tab[1][1]);
-                thetaY = atan2(tab[0][2],tab[0][0]);
+                    if (mat[0][1] > -1)
+                    {
+                        thetaZ = asin(-mat[0][1]);
+                        thetaX = atan2(mat[2][1],mat[1][1]);
+                        thetaY = atan2(mat[0][2],mat[0][0]);
+                    }
+                    else
+                        {
+                            thetaZ = +PI/2;
+                            thetaX = atan2(-mat[2][0],mat[2][2]);
+                            thetaY = 0;
+                        }
                 }
                 else
                 {
-                thetaZ = +PI/2;
-                thetaX = atan2(-tab[2][0],tab[2][2]);
-                thetaY = 0;
-                }
-                }
-                else
-                {
-                thetaZ = -PI/2;
-                thetaX = atan2(-tab[2][0],tab[2][2]);
-                thetaY = 0;
+                    thetaZ = -PI/2;
+                    thetaX = atan2(-mat[2][0],mat[2][2]);
+                    thetaY = 0;
                 }
             }
             else
             {
                 if (order=="YXZ")
                 {
-                    if (tab[1][2] < +1)
+                    if (mat[1][2] < +1)
                     {
-                        if (tab[1][2] > -1)
+                        if (mat[1][2] > -1)
                         {
-                        thetaX = asin(-tab[1][2]);
-                        thetaY = atan2(tab[0][2],tab[2][2]);
-                        thetaZ = atan2(tab[1][0],tab[1][1]);
+                            thetaX = asin(-mat[1][2]);
+                            thetaY = atan2(mat[0][2],mat[2][2]);
+                            thetaZ = atan2(mat[1][0],mat[1][1]);
                         }
                         else
                         {
-                        thetaX = +PI/2;
-                        thetaY = -atan2(-tab[0][1],tab[0][0]);
-                        thetaZ = 0;
+                            thetaX = +PI/2;
+                            thetaY = -atan2(-mat[0][1],mat[0][0]);
+                            thetaZ = 0;
                         }
                     }
                     else
                     {
-                    thetaX = -PI/2;
-                    thetaY = atan2(-tab[0][1],tab[0][0]);
-                    thetaZ = 0;
+                        thetaX = -PI/2;
+                        thetaY = atan2(-mat[0][1],mat[0][0]);
+                        thetaZ = 0;
                     }
                 }
                 else
                 {
                     if(order=="YZX")
                     {
-                        if (tab[1][0] < +1)
+                        if (mat[1][0] < +1)
                         {
-                            if (tab[1][0] > -1)
+                            if (mat[1][0] > -1)
                             {
-                            thetaZ = asin(tab[1][0]);
-                            thetaY = atan2(-tab[2][0],tab[0][0]);
-                            thetaX = atan2(-tab[1][2],tab[1][1]);
+                                thetaZ = asin(mat[1][0]);
+                                thetaY = atan2(-mat[2][0],mat[0][0]);
+                                thetaX = atan2(-mat[1][2],mat[1][1]);
                             }
                             else
                             {
-                            thetaZ = -PI/2;
-                            thetaY = -atan2(tab[2][1],tab[2][2]);
-                            thetaX = 0;
+                                thetaZ = -PI/2;
+                                thetaY = -atan2(mat[2][1],mat[2][2]);
+                                thetaX = 0;
                             }
                         }
                         else
                         {
-
-                        thetaZ = +PI/2;
-                        thetaY = atan2(tab[2][1],tab[2][2]);
-                        thetaX = 0;
+                            thetaZ = +PI/2;
+                            thetaY = atan2(mat[2][1],mat[2][2]);
+                            thetaX = 0;
                         }
 
                     }
@@ -1900,27 +2156,27 @@ angles Data::calc_matrix_3_rot(QMatrix4x4 matrix, string order)
                     {
                         if (order=="ZXY")
                         {
-                            if (tab[2][1] < +1)
+                            if (mat[2][1] < +1)
                             {
-                                if (tab[2][1] > -1)
+                                if (mat[2][1] > -1)
                                 {
 
-                                thetaX = asin(tab[2][1]);
-                                thetaZ = atan2(-tab[0][1],tab[1][1]);
-                                thetaY = atan2(-tab[2][0],tab[2][2]);
+                                    thetaX = asin(mat[2][1]);
+                                    thetaZ = atan2(-mat[0][1],mat[1][1]);
+                                    thetaY = atan2(-mat[2][0],mat[2][2]);
                                 }
                                 else
                                 {
-                                thetaX = -PI/2;
-                                thetaZ = -atan2(tab[2][0],tab[0][0]);
-                                thetaY = 0;
+                                    thetaX = -PI/2;
+                                    thetaZ = -atan2(mat[2][0],mat[0][0]);
+                                    thetaY = 0;
                                 }
                             }
                             else
                             {
-                            thetaX = +PI/2;
-                            thetaZ = atan2(tab[2][0],tab[0][0]);
-                            thetaY = 0;
+                                thetaX = +PI/2;
+                                thetaZ = atan2(mat[2][0],mat[0][0]);
+                                thetaY = 0;
                             }
 
                         }
@@ -1928,26 +2184,26 @@ angles Data::calc_matrix_3_rot(QMatrix4x4 matrix, string order)
                         {
                             if(order=="ZYX")
                             {
-                                if (tab[2][0] < +1)
+                                if (mat[2][0] < +1)
                                 {
-                                    if (tab[2][0] > -1)
+                                    if (mat[2][0] > -1)
                                     {
-                                    thetaY = asin(-tab[2][0]);
-                                    thetaZ = atan2(tab[1][0],tab[0][0]);
-                                    thetaX = atan2(tab[2][1],tab[2][2]);
+                                        thetaY = asin(-mat[2][0]);
+                                        thetaZ = atan2(mat[1][0],mat[0][0]);
+                                        thetaX = atan2(mat[2][1],mat[2][2]);
                                     }
                                     else
                                     {
-                                    thetaY = +PI/2;
-                                    thetaZ = atan2(-tab[1][2],tab[1][1]);
-                                    thetaX = 0;
+                                        thetaY = +PI/2;
+                                        thetaZ = atan2(-mat[1][2],mat[1][1]);
+                                        thetaX = 0;
                                     }
                                 }
                                 else
                                 {
-                                thetaY = -PI/2;
-                                thetaZ = atan2(-tab[1][2],tab[1][1]);
-                                thetaX = 0;
+                                    thetaY = -PI/2;
+                                    thetaZ = atan2(-mat[1][2],mat[1][1]);
+                                    thetaX = 0;
                                 }
                             }
                         }
@@ -1986,14 +2242,14 @@ void Data::bvh_reorder(hierarchy_bvh &h_bvh_org, frames_data &f_bvh_org, string 
         int p_ty;
         int p_tz;
 
-        int i1=0;
+        //int i1=0;
 
          bool tx=false;
          bool ty=false;
         bool tz=false;
-        bool rx=false;
-        bool ry=false;
-        bool rz=false;
+//        bool rx=false;
+//        bool ry=false;
+//        bool rz=false;
         vector<string> old_order=h_bvh_org.joints[j].channels;
         vector<string> new_order;
 
@@ -2003,7 +2259,7 @@ void Data::bvh_reorder(hierarchy_bvh &h_bvh_org, frames_data &f_bvh_org, string 
         mat.setToIdentity();
         angles xyz;
 
-        int sf=h_bvh_org.joints[j].self_index_frame;
+        int sf=find_joint_index_f_bvh(f_bvh_org, h_bvh_org.joints[j].name);
 
                 for (int ch = 0; ch < h_bvh_org.joints[j].channels.size(); ++ch)
                 {
@@ -2244,38 +2500,38 @@ void Data::asf_reorder(hierarchy_asf &h_asf, frames_data &f_amc, string rot_orde
                 h_asf.root.axis.push_back(c);
             }
 
-            for (int i = 0; i < h_asf.joints[0].dof.size(); ++i)
-            {
-                if (h_asf.joints[0].dof[i]=="RX")
-                {
-                    old_dof_order.push_back("RX");
-                }
-                else
-                    if (h_asf.joints[0].dof[i]=="RY")
-                    {
-                        old_dof_order.push_back("RY");
-                    }
-                    else
-                        if (h_asf.joints[0].dof[i]=="RZ")
-                        {
-                            old_dof_order.push_back("RZ");
-                        }
-                        else
-                            if (h_asf.joints[0].dof[i]=="TX")
-                            {
-                                old_dof_order.push_back("TX");
-                            }
-                            else
-                                if (h_asf.joints[0].dof[i]=="TY")
-                                {
-                                    old_dof_order.push_back("TY");
-                                }
-                                else
-                                    if (h_asf.joints[0].dof[i]=="TZ")
-                                    {
-                                        old_dof_order.push_back("TZ");
-                                    }
-            }
+//            for (int i = 0; i < h_asf.joints[0].dof.size(); ++i)
+//            {
+//                if (h_asf.joints[0].dof[i]=="RX")
+//                {
+//                    old_dof_order.push_back("RX");
+//                }
+//                else
+//                    if (h_asf.joints[0].dof[i]=="RY")
+//                    {
+//                        old_dof_order.push_back("RY");
+//                    }
+//                    else
+//                        if (h_asf.joints[0].dof[i]=="RZ")
+//                        {
+//                            old_dof_order.push_back("RZ");
+//                        }
+//                        else
+//                            if (h_asf.joints[0].dof[i]=="TX")
+//                            {
+//                                old_dof_order.push_back("TX");
+//                            }
+//                            else
+//                                if (h_asf.joints[0].dof[i]=="TY")
+//                                {
+//                                    old_dof_order.push_back("TY");
+//                                }
+//                                else
+//                                    if (h_asf.joints[0].dof[i]=="TZ")
+//                                    {
+//                                        old_dof_order.push_back("TZ");
+//                                    }
+//            }
 
             istringstream buf2(rot_order);
             for (char c; buf2>>c;)
@@ -2718,8 +2974,8 @@ void Data::bvh_root(hierarchy_bvh &h_bvh)
     //mat.translate(cords_root.x,cords_root.y,cords_root.z);
 
     string name=h_bvh.joints[0].name;
-    qDebug()<<QString::fromStdString(name)<<" frame 0";
-    qDebug()<<mat<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame 0";
+    //qDebug()<<mat<<"\n";
 
     angle.x=0;
     angle.y=0;
@@ -2776,8 +3032,8 @@ void Data::bvh_joint(hierarchy_bvh &h_bvh, int index, int parent, double x, doub
     angle.z=0;
 
     string name=h_bvh.joints[index].name;
-    qDebug()<<QString::fromStdString(name)<<" frame 0";
-    qDebug()<<mat<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame 0";
+    //qDebug()<<mat<<"\n";
 
 
     h_bvh.joints[index].cords.push_back(xyz);
@@ -2799,6 +3055,10 @@ void Data::bvh_root_frame(hierarchy_bvh &h_bvh, frames_data &f_bvh, int frame)//
     QVector3D sum;
     QMatrix4x4 transform;
     QMatrix4x4 local_rotation;
+    QMatrix4x4 X;
+    QMatrix4x4 Y;
+    QMatrix4x4 Z;
+    QMatrix4x4 I;
     translations tr;
     int f=frame;
     cords par;
@@ -2817,7 +3077,9 @@ void Data::bvh_root_frame(hierarchy_bvh &h_bvh, frames_data &f_bvh, int frame)//
      offset.setY(h_bvh.joints[0].offset[1]);
      offset.setZ(h_bvh.joints[0].offset[2]);
     for (int i = 0; i < h_bvh.joints[0].channels.size(); ++i)
+   //for (int i = h_bvh.joints[0].channels.size()-1; i >= 0 ; --i)//to nie działa
     {
+        qDebug()<<i;
         if(h_bvh.joints[0].channels[i]=="Xposition")
         {
            
@@ -2877,17 +3139,18 @@ void Data::bvh_root_frame(hierarchy_bvh &h_bvh, frames_data &f_bvh, int frame)//
     par.x=x;
     par.y=y;
     par.z=z;
-    transform=transform.transposed();
-    h_bvh.joints[0].vector_to_position.push_back(transform);
+    transform=transform.transposed();//<-sprawdzenie czy transpozycja jest potrzebna (wniosek - transpozycja jest potrzeban)
+    h_bvh.joints[0].vector_to_position.push_back(I);
     h_bvh.joints[0].self_matrix.push_back(transform);
 
     string name=h_bvh.joints[0].name;
-    qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(frame+1);
-    qDebug()<<transform<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(frame+1);
+    //qDebug()<<transform<<"\n";
 
 
 
-    h_bvh.joints[0].transformation_matrix=transform.transposed();
+    h_bvh.joints[0].transformation_matrix=transform;
+    //h_bvh.joints[0].transformation_matrix=transform; //odwrócona kolejność nie dziiala transpozycja
     h_bvh.joints[0].cords.push_back(par);
     h_bvh.joints[0].angles.push_back(ang);
     h_bvh.joints[0].global_matrix.push_back(transform);
@@ -2936,6 +3199,7 @@ void Data::bvh_joint_frame(hierarchy_bvh &h_bvh, frames_data &f_bvh, int frame, 
         }
     }
 
+    //for (int i = h_bvh.joints[index].channels.size()-1; i >= 0; i--) //odwrucona kolejność nie działa
     for (int i = 0; i < h_bvh.joints[index].channels.size(); ++i)
     {
 
@@ -2964,18 +3228,20 @@ void Data::bvh_joint_frame(hierarchy_bvh &h_bvh, frames_data &f_bvh, int frame, 
 
     QVector3D position = offset*h_bvh.joints[parent].transformation_matrix;
 
+    transform=transform.transposed();//<-sprawdzenie czy transpozycja jest potrzebna
+
     h_bvh.joints[index].vector_to_position.push_back(h_bvh.joints[parent].transformation_matrix);
-    h_bvh.joints[index].self_matrix.push_back(transform.transposed());
+    h_bvh.joints[index].self_matrix.push_back(transform);
 
     string name=h_bvh.joints[index].name;
-    qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(frame+1);
-    qDebug()<<h_bvh.joints[parent].transformation_matrix<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(frame+1);
+    //qDebug()<<h_bvh.joints[parent].transformation_matrix<<"\n";
 
     QVector3D position_parent(x,y,z);
     position+=position_parent;
 
-    transform=transform.transposed()*h_bvh.joints[parent].transformation_matrix;
-
+    transform=transform*h_bvh.joints[parent].transformation_matrix;
+    //transform=transform*h_bvh.joints[parent].transformation_matrix; // odwrócona kolejność nie działa
     par.x=position.x();
     par.y=position.y();
     par.z=position.z();
@@ -3015,6 +3281,10 @@ void Data::asf_root(hierarchy_asf &h_asf)
     QMatrix4x4 L;
     QVector3D offset;
     float cx,cy,cz;
+    double ang_x=h_asf.joints[0].axis[0];
+    double ang_y=h_asf.joints[0].axis[1];
+    double ang_z=h_asf.joints[0].axis[2];
+
     offset.setX(h_asf.joints[0].direction[0]);
     offset.setY(h_asf.joints[0].direction[1]);
     offset.setZ(h_asf.joints[0].direction[2]);
@@ -3023,9 +3293,7 @@ void Data::asf_root(hierarchy_asf &h_asf)
     cy=h_asf.joints[0].axis[1];
     cz=h_asf.joints[0].axis[2];
 
-    double ang_x=h_asf.joints[0].axis[0];
-    double ang_y=h_asf.joints[0].axis[1];
-    double ang_z=h_asf.joints[0].axis[2];
+
     h_asf.root.angles.clear();
     h_asf.joints[0].angles.clear();
     h_asf.root.cords.clear();
@@ -3064,7 +3332,7 @@ void Data::asf_root(hierarchy_asf &h_asf)
 
 
     h_asf.joints[0].Cinv=C;
-    h_asf.joints[0].C=Cinv;
+    h_asf.joints[0].C=C.inverted(); //// chyba jednak c = c.inverted()
     L=h_asf.joints[0].Cinv * M * h_asf.joints[0].C;
     h_asf.joints[0].vector_to_position.push_back(L);
     h_asf.joints[0].self_matrix.push_back(L);
@@ -3072,8 +3340,8 @@ void Data::asf_root(hierarchy_asf &h_asf)
     QVector3D vec=offset*L;
 
     string name=h_asf.joints[0].name;
-    qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(0);
-    qDebug()<<L<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(0);
+    //qDebug()<<L<<"\n";
 
     xyz.x=vec.x();
     xyz.y=vec.y();
@@ -3154,8 +3422,8 @@ void Data::asf_joint(hierarchy_asf &h_asf, int index, int parent, double x, doub
     h_asf.joints[index].vector_to_position.push_back(L);
 
     string name=h_asf.joints[index].name;
-    qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(0);
-    qDebug()<<L<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(0);
+    //qDebug()<<L<<"\n";
 
     QVector3D vec=offset*L;
     vec=vec+parent_position;
@@ -3260,31 +3528,32 @@ void Data::asf_root_frame(hierarchy_asf &h_asf, frames_data &f_amc, int f)
     }
 
     offset=offset+trans;
-    for (int a=0;h_asf.joints[0].axis_order.size();++a)
+    for (int a=0;a<h_asf.joints[0].axis_order.size();++a)
     {
         if (h_asf.joints[0].axis_order[a]=='X'||h_asf.joints[0].axis_order[a]=='x')
         {
-            M=M*X;
+            M=X*M;
         }
         else
             if (h_asf.joints[0].axis_order[a]=='Y'||h_asf.joints[0].axis_order[a]=='y')
             {
-                M=M*Y;
+                M=Y*M;
             }
             else
                 if (h_asf.joints[0].axis_order[a]=='Z'||h_asf.joints[0].axis_order[a]=='z')
                 {
-                    M=M*Z;
+                    M=Z*M;
                 }
     }
-    M=M.inverted();
+    M=M.transposed();
+
     L=M;
     h_asf.joints[0].vector_to_position.push_back(L);
     h_asf.joints[0].self_matrix.push_back(L);
 
     string name=h_asf.joints[0].name;
-    qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(f+1);
-    qDebug()<<L<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(f+1);
+    //qDebug()<<L<<"\n";
 
     xyz.x=offset.x();
     xyz.y=offset.y();
@@ -3386,32 +3655,32 @@ void Data::asf_joint_frame(hierarchy_asf &h_asf, frames_data &f_amc, int f, int 
             ang.z=f_amc.frames[f].channel_data[f_index].channels[i];
         }
     }
-    for (int a=0;h_asf.joints[index].axis_order.size();++a)
+    for (int a=0;a<h_asf.joints[index].axis_order.size();++a)
     {
         if (h_asf.joints[index].axis_order[a]=='X'||h_asf.joints[index].axis_order[a]=='x')
         {
-            M=M*X;
+            M=X*M;
         }
         else
             if (h_asf.joints[index].axis_order[a]=='Y'||h_asf.joints[index].axis_order[a]=='y')
             {
-                M=M*Y;
+                M=Y*M;
             }
             else
                 if (h_asf.joints[index].axis_order[a]=='Z'||h_asf.joints[index].axis_order[a]=='z')
                 {
-                    M=M*Z;
+                    M=Z*M;
                 }
     }
-    M=M.inverted();
-    L=h_asf.joints[index].Cinv * M * h_asf.joints[index].C;
+    M=M.transposed();
+    L=h_asf.joints[index].Cinv * M * h_asf.joints[index].C ;
     h_asf.joints[index].self_matrix.push_back(L);
     L=L*h_asf.joints[parent].transformation_matrix;
     offset=offset+translation;
 
     string name=h_asf.joints[index].name;
-    qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(f+1);
-    qDebug()<<L<<"\n";
+    //qDebug()<<QString::fromStdString(name)<<" frame "<<QString::number(f+1);
+    //qDebug()<<L<<"\n";
 
     QVector3D position=offset*L;
     position+=parent_pos;
@@ -3613,6 +3882,11 @@ void Data::bvh_change_name(hierarchy_bvh &h_bvh, frames_data &f_bvh, string old_
     int hierarchy_joint_index=0;
     int frames_joint_index=0;
     int parent_index;
+   
+    if (find_joint_index_h_bvh(h_bvh,old_name)!=-1) 
+    {
+        return;    
+    }
 
     hierarchy_joint_index= find_joint_index_h_bvh(h_bvh,old_name);
     
@@ -3795,6 +4069,10 @@ void Data::asf_add_joint_above(hierarchy_asf &h_asf, frames_data &f_amc, string 
     int child_index=find_joint_index_h_asf(h_asf,child_name);
     int parent_index=find_joint_index_h_asf(h_asf,h_asf.joints[child_index].parent);
     int id=0;
+    if (find_joint_index_h_asf(h_asf,new_joint_name)!=-1)
+    {
+        return;
+    }
 
     new_joint.name=new_joint_name;
     new_joint.direction.push_back(0);
@@ -3868,7 +4146,6 @@ void Data::asf_add_joint_above(hierarchy_asf &h_asf, frames_data &f_amc, string 
          }
      }
 
-
 }
 
 void Data::asf_add_joint_below(hierarchy_asf &h_asf, frames_data &f_amc, string new_joint_name, string parent_name)
@@ -3876,6 +4153,11 @@ void Data::asf_add_joint_below(hierarchy_asf &h_asf, frames_data &f_amc, string 
     joint_asf new_joint;
     int parent_index=find_joint_index_h_asf(h_asf,parent_name);
     int id=0;
+
+    if (find_joint_index_h_asf(h_asf,new_joint_name)!=-1)
+    {
+        return;
+    }
 
     new_joint.name=new_joint_name;
     new_joint.direction.push_back(0);
@@ -3949,6 +4231,11 @@ void Data::asf_change_name(hierarchy_asf &h_asf, frames_data &f_amc, string old_
     int hierarchy_joint_index=0;
     int frames_joint_index=0;
     int parent_index;
+    \
+    if (find_joint_index_h_asf(h_asf,new_name)!=-1)
+    {
+        return;
+    }
 
     hierarchy_joint_index= find_joint_index_h_asf(h_asf,old_name);
 
@@ -3984,12 +4271,6 @@ void Data::asf_remove_joint(hierarchy_asf &h_asf, frames_data &f_amc, string nam
     int parent_index=0;
     int f;
     string parent_name;
-
-    joint_index=find_joint_index_h_asf(h_asf,name);
-    if (joint_index==-1)
-    {
-        return;
-    }
 
     parent_name=h_asf.joints[joint_index].parent;
     parent_index=find_joint_index_h_asf(h_asf,parent_name);
@@ -4169,11 +4450,20 @@ void Data::amc_rad_to_deg(hierarchy_asf &h_asf, frames_data &f_amc)
 
 
     }
+    for (int a=0;a<h_asf.joints[0].axis.size();++a)
+    {
+        h_asf.root.orientation[a] = h_asf.root.orientation[a] * 57.2957795;
+        h_asf.joints[0].axis[a] = h_asf.joints[0].axis[a] * 57.2957795;
+    }
 
     for (int i = 1; i < h_asf.joints.size(); ++i)
     {
         int rx=0, ry=0, rz=0;
         bool x=false, y=false, z=false;
+        for (int a_j=0;a_j<h_asf.joints[i].axis.size();++a_j)
+        {
+           h_asf.joints[i].axis[a_j] = h_asf.joints[i].axis[a_j] * 57.2957795;
+        }
         for (int d = 0; d < h_asf.joints[i].dof.size(); ++d)
         {
             if (h_asf.joints[i].dof[d]=="rx")

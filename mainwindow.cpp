@@ -24,78 +24,8 @@
 #include <QOpenGLWidget>
 #include <QMatrix3x3>
 #include "qwidgetgl.h"
+#include <iomanip>
 
-// Front Verticies
-
-//triangle
-#define VERTEX_A Vertex( QVector3D(  0.0f,  1.0f,  0.0f), QVector3D( 1.0f, 0.0f, 0.0f ) )//
-#define VERTEX_E Vertex( QVector3D(  0.0f,  1.0f,  0.0f), QVector3D( 0.0f, 1.0f, 0.0f ) )//
-#define VERTEX_I Vertex( QVector3D(  0.0f,  1.0f,  0.0f), QVector3D( 0.0f, 0.0f, 1.0f ) )
-#define VERTEX_B Vertex( QVector3D( -1.0f,  0.0f,  0.5f), QVector3D( 1.0f, 0.0f, 0.0f ) )//
-#define VERTEX_F Vertex( QVector3D( -1.0f,  0.0f,  0.5f), QVector3D( 0.0f, 1.0f, 0.0f ) )//
-#define VERTEX_J Vertex( QVector3D( -1.0f,  0.0f,  0.5f), QVector3D( 1.0f, 1.0f, 0.0f ) )
-#define VERTEX_C Vertex( QVector3D(  1.0f,  0.0f,  0.5f), QVector3D( 1.0f, 0.0f, 0.0f ) )//
-#define VERTEX_G Vertex( QVector3D(  1.0f,  0.0f,  0.5f), QVector3D( 0.0f, 0.0f, 1.0f ) )
-#define VERTEX_K Vertex( QVector3D(  1.0f,  0.0f,  0.5f), QVector3D( 1.0f, 1.0f, 0.0f ) )
-#define VERTEX_D Vertex( QVector3D( 0.0f,  0.0f,  -0.5f), QVector3D( 0.0f, 1.0f, 0.0f ) )//
-#define VERTEX_H1 Vertex( QVector3D( 0.0f,  0.0f,  -0.5f), QVector3D( 0.0f, 0.0f, 1.0f ) )
-#define VERTEX_L Vertex( QVector3D( 0.0f,  0.0f,  -0.5f), QVector3D( 1.0f, 1.0f, 0.0f ) )
-
-//cube
-#define VERTEX_FTR Vertex( QVector3D( 0.5f,  0.5f,  0.5f), QVector3D( 1.0f, 0.0f, 0.0f ) )
-#define VERTEX_FTL Vertex( QVector3D(-0.5f,  0.5f,  0.5f), QVector3D( 0.0f, 1.0f, 0.0f ) )
-#define VERTEX_FBL Vertex( QVector3D(-0.5f, -0.5f,  0.5f), QVector3D( 0.0f, 0.0f, 1.0f ) )
-#define VERTEX_FBR Vertex( QVector3D( 0.5f, -0.5f,  0.5f), QVector3D( 0.0f, 0.0f, 0.0f ) )
-#define VERTEX_BTR Vertex( QVector3D( 0.5f,  0.5f, -0.5f), QVector3D( 1.0f, 1.0f, 0.0f ) )
-#define VERTEX_BTL Vertex( QVector3D(-0.5f,  0.5f, -0.5f), QVector3D( 0.0f, 1.0f, 1.0f ) )
-#define VERTEX_BBL Vertex( QVector3D(-0.5f, -0.5f, -0.5f), QVector3D( 1.0f, 0.0f, 1.0f ) )
-#define VERTEX_BBR Vertex( QVector3D( 0.5f, -0.5f, -0.5f), QVector3D( 1.0f, 0.0f, 0.0f ) )
-
-#define A Vertex( QVector3D(  -0.10f, -0.10f,   0.10f), QVector3D( 1.0f, 0.0f, 0.0f ) )
-#define B Vertex( QVector3D(   0.10f, -0.10f,   0.10f), QVector3D( 1.0f, 0.0f, 0.0f ) )
-#define C Vertex( QVector3D(   0.10f, -0.10f,  -0.10f), QVector3D( 1.0f, 0.0f, 0.0f ) )
-#define D Vertex( QVector3D(  -0.10f, -0.10f,  -0.10f), QVector3D( 1.0f, 0.0f, 0.0f ) )
-
-#define E Vertex( QVector3D(  -0.10f,  0.10f,   0.10f), QVector3D( 0.0f, 1.0f, 0.0f ) )
-#define F Vertex( QVector3D(   0.10f,  0.10f,   0.10f), QVector3D( 0.0f, 1.0f, 0.0f ) )
-#define G Vertex( QVector3D(   0.10f,  0.10f,  -0.10f), QVector3D( 0.0f, 1.0f, 0.0f ) )
-#define H Vertex( QVector3D(  -0.10f,  0.10f,  -0.10f), QVector3D( 0.0f, 1.0f, 0.0f ) )
-
-
-// Create a colored triangle
-QVector<Vertex> triangle =
-{
-//Front Face
-    VERTEX_A,VERTEX_B,VERTEX_C,
-//Right Face
-    VERTEX_E,VERTEX_D,VERTEX_F,
-//Left Face
-    VERTEX_I,VERTEX_G,VERTEX_H1,
-//Bottom Face
-    VERTEX_J,VERTEX_L,VERTEX_K
-};
-
-QVector<Vertex> cube =
-{
-    // Face 1 (Front)
-      VERTEX_FTR, VERTEX_FTL, VERTEX_FBL,
-      VERTEX_FBL, VERTEX_FBR, VERTEX_FTR,
-    // Face 2 (Back)
-      VERTEX_BBR, VERTEX_BTL, VERTEX_BTR,
-      VERTEX_BTL, VERTEX_BBR, VERTEX_BBL,
-    // Face 3 (Top)
-      VERTEX_FTR, VERTEX_BTR, VERTEX_BTL,
-      VERTEX_BTL, VERTEX_FTL, VERTEX_FTR,
-    // Face 4 (Bottom)
-      VERTEX_FBR, VERTEX_FBL, VERTEX_BBL,
-      VERTEX_BBL, VERTEX_BBR, VERTEX_FBR,
-    // Face 5 (Left)
-      VERTEX_FBL, VERTEX_FTL, VERTEX_BTL,
-      VERTEX_FBL, VERTEX_BTL, VERTEX_BBL,
-    // Face 6 (Right)
-      VERTEX_FTR, VERTEX_FBR, VERTEX_BBR,
-      VERTEX_BBR, VERTEX_BTR, VERTEX_FTR
-  };
 
 
 
@@ -104,26 +34,25 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-
-
     ui->setupUi(this);
     ui->treeWidget->setColumnCount(1);
     ui->treeWidget->setHeaderHidden(true);
  // ui.treeWidget. nazwa kolumny zmienić na "Hierarchia"
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    connect(ui->treeWidget,SIGNAL(on_treeWidget_customContextMenuRequested(const QPoint&)),this,SLOT(on_treeWidget_customContextMenuRequested(const QPoint&)));
+    //connect(ui->treeWidget,SIGNAL(on_treeWidget_customContextMenuRequested(const QPoint&)),this,SLOT(on_treeWidget_customContextMenuRequested(const QPoint&)));
     connect(ui->openGLWidget_2,SIGNAL(frameSwapped()),ui->openGLWidget_2,SLOT(update()));
     connect(ui->customPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showPointToolTip1(QMouseEvent*)));
-    QTimer *asfTimer = new QTimer(this);
-    QTimer *bvhTimer = new QTimer(this);
+//    QTimer *asfTimer = new QTimer(this);
+//    QTimer *bvhTimer = new QTimer(this);
    // ui->tableWidget = new QTableWidget(this);
     timer = new QTimer(this);
     timer->setInterval(10);
     connect(timer,SIGNAL(timeout()), this,SLOT(frame_iter()));
    // connect(timer,SIGNAL(timeout()), this,SLOT(t_out()));
    // test_matrix_transforms();
-
+    frame=0;
+    interval=0;
 
 
     QString text="XYZ";
@@ -139,9 +68,9 @@ MainWindow::MainWindow(QWidget *parent) :
      text="ZYX";
     ui->comboBox_3->addItem(text);
 
-   test_QMatrix4x4();
+   //test_QMatrix4x4();
 
-   qDebug()<<"odwrócić kolejność rotacji w bvh i asf //wystarczy zmienić for na i = channels.size oraz i = axis order.size i dof.size";
+  // qDebug()<<"odwrócić kolejność rotacji w bvh i asf //wystarczy zmienić for na i = channels.size oraz i = axis order.size i dof.size";
 
  }
 
@@ -150,11 +79,11 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::showRMenu(QPoint &point){
-    qDebug()<<"showAbout\n";
+//void MainWindow::showRMenu(QPoint &point){
+//    //qDebug()<<"showAbout\n";
 
 
-}
+//}
 
 void MainWindow::AddRoot_bvh(QString name){
     QTreeWidgetItem *itm=new QTreeWidgetItem(ui->treeWidget);
@@ -166,7 +95,7 @@ void MainWindow::AddRoot_bvh(QString name){
 }
 void MainWindow::AddChild_bvh(QString name,QTreeWidgetItem *parent){
     QTreeWidgetItem *itm=new QTreeWidgetItem();
-    int t;
+    int t=0;
     itm->setText(0,name);
     parent->addChild(itm);
     for (int i = 0; i <main_data.h_bvh.joints.size()  ; ++i) {
@@ -190,7 +119,7 @@ void MainWindow::AddRoot_asf(QString name){
 }
 void MainWindow::AddChild_asf(QString name,QTreeWidgetItem *parent){
     QTreeWidgetItem *itm=new QTreeWidgetItem();
-    int t;
+    int t=0;
     itm->setText(0,name);
     parent->addChild(itm);
     for (int i = 0; i <main_data.h_asf.joints.size()  ; ++i) {
@@ -207,148 +136,148 @@ void MainWindow::AddChild_asf(QString name,QTreeWidgetItem *parent){
 
 
 
-void MainWindow::on_pushButton_clicked()//set frame to 0;
-{
-    frame=0;
-    timer->stop();
-    ui->horizontalSlider->setValue(0);
-    draw();
-}
+//void MainWindow::on_pushButton_clicked()//set frame to 0;
+//{
+//    frame=0;
+//    timer->stop();
+//    ui->horizontalSlider->setValue(0);
+//    draw();
+//}
 
-void MainWindow::on_pushButton_3_clicked()
+void MainWindow::on_step_backward_clicked()
 {
     if (frame>0)
     {
         frame--;
-        ui->horizontalSlider->setValue(frame);
+        ui->slider->setValue(frame);
         draw();
     }
 
 }
 
-void MainWindow::on_pushButton_4_clicked()
+void MainWindow::on_pause_button_clicked()
 {
     timer->stop();
 }
 
-void MainWindow::on_pushButton_5_clicked() ///start
+void MainWindow::on_play_button_clicked() ///start
 {
 
     timer->start();
 
 }
 
-void MainWindow::on_pushButton_6_clicked()
+void MainWindow::on_step_forward_clicked()
 {
-    if (ui->radioButton->isChecked())
+    if (ui->bvh->isChecked())
     {
         if (frame<main_data.h_bvh.joints[0].cords.size()-1)
         {
             frame++;
-            ui->horizontalSlider->setValue(frame);
+            ui->slider->setValue(frame);
             draw();
         }
     }
     else
     {
-        if (ui->radioButton_2->isChecked())
+        if (ui->asf->isChecked())
         {
             if (frame<main_data.h_asf.joints[0].cords.size()-1)
             {
                 frame++;
-                ui->horizontalSlider->setValue(frame);
+                ui->slider->setValue(frame);
                 draw();
             }
         }
     }
 }
 
-void MainWindow::on_pushButton_7_clicked() //test button++++++++++++++++++++++
-{
-    //draw();
-    /*
-    QVector<float> temp;
-    for (int i = 0; i < main_data.f_bvh.frames.size(); ++i)
-    {
-        for (int j = 0; j < main_data.f_bvh.frames[i].channel_data.size(); ++j)
-        {
-            for (int k = 0; k < main_data.f_bvh.frames[i].channel_data[j].channels.size(); ++k)
-            {
-                temp.push_back(main_data.f_bvh.frames[i].channel_data[j].channels[k]);
-            }
-        }
-        qDebug()<<temp;
-        temp.clear();
-    }
-    */
-    //cylinder();
+//void MainWindow::on_pushButton_7_clicked() //test button++++++++++++++++++++++
+//{
+//    //draw();
+//    /*
+//    QVector<float> temp;
+//    for (int i = 0; i < main_data.f_bvh.frames.size(); ++i)
+//    {
+//        for (int j = 0; j < main_data.f_bvh.frames[i].channel_data.size(); ++j)
+//        {
+//            for (int k = 0; k < main_data.f_bvh.frames[i].channel_data[j].channels.size(); ++k)
+//            {
+//                temp.push_back(main_data.f_bvh.frames[i].channel_data[j].channels[k]);
+//            }
+//        }
+//        qDebug()<<temp;
+//        temp.clear();
+//    }
+//    */
+//    //cylinder();
 
-    //main_data.asf_reorder(main_data.h_asf,main_data.f_amc,ui->comboBox_3->currentText().toStdString());
+//    //main_data.asf_reorder(main_data.h_asf,main_data.f_amc,ui->comboBox_3->currentText().toStdString());
 
-    return_asf r_asf;
-    r_asf=main_data.bvh_to_asf_conversion(main_data.h_bvh,main_data.f_bvh);
-
-
+//    return_asf r_asf;
+//    r_asf=main_data.bvh_to_asf_conversion(main_data.h_bvh,main_data.f_bvh);
 
 
-    QString filename="Data.txt";
-    QFile file( filename );
-    file.remove();
-    file.open(QIODevice::WriteOnly | QIODevice::Text);
-    QTextStream stream( &file );
-    for (int i = 0; i < main_data.h_bvh.joints.size(); ++i)
-    {
-        stream<<QString::fromStdString(main_data.h_bvh.joints[i].name)<<"\n";
-        for (int j = 0; j < main_data.h_bvh.joints[i].global_matrix.size(); ++j)
-        {
-            for (int k = 0; k < 4; ++k)
-            {
-                //QVector4D vec=main_data.h_bvh.joints[i].global_matrix[j].column(k); row >> column
-                QVector4D vec=main_data.h_bvh.joints[i].global_matrix[j].row(k);
-                stream<<vec.x()<<" "<<vec.y()<<" "<<vec.z()<<" "<<vec.w()<<"\n";
-            }
-            stream<<"\n";
-        }
-        stream<<"\n";
-    }
-    file.close();
+
 
 //    QString filename="Data.txt";
 //    QFile file( filename );
 //    file.remove();
 //    file.open(QIODevice::WriteOnly | QIODevice::Text);
 //    QTextStream stream( &file );
-//    QMatrix4x4 mat;
-//    mat.rotate(30,1,0,0);
-//    for (int k = 0; k < 4; ++k)
+//    for (int i = 0; i < main_data.h_bvh.joints.size(); ++i)
 //    {
-//        //QVector4D vec=mat.column(k); //row >> column
-//        QVector4D vec=mat.row(k);
-//        stream<<vec.x()<<" "<<vec.y()<<" "<<vec.z()<<" "<<vec.w()<<"\n";
+//        stream<<QString::fromStdString(main_data.h_bvh.joints[i].name)<<"\n";
+//        for (int j = 0; j < main_data.h_bvh.joints[i].global_matrix.size(); ++j)
+//        {
+//            for (int k = 0; k < 4; ++k)
+//            {
+//                //QVector4D vec=main_data.h_bvh.joints[i].global_matrix[j].column(k); row >> column
+//                QVector4D vec=main_data.h_bvh.joints[i].global_matrix[j].row(k);
+//                stream<<vec.x()<<" "<<vec.y()<<" "<<vec.z()<<" "<<vec.w()<<"\n";
+//            }
+//            stream<<"\n";
+//        }
+//        stream<<"\n";
 //    }
-//    stream<<"\n";
+//    file.close();
 
-}
+////    QString filename="Data.txt";
+////    QFile file( filename );
+////    file.remove();
+////    file.open(QIODevice::WriteOnly | QIODevice::Text);
+////    QTextStream stream( &file );
+////    QMatrix4x4 mat;
+////    mat.rotate(30,1,0,0);
+////    for (int k = 0; k < 4; ++k)
+////    {
+////        //QVector4D vec=mat.column(k); //row >> column
+////        QVector4D vec=mat.row(k);
+////        stream<<vec.x()<<" "<<vec.y()<<" "<<vec.z()<<" "<<vec.w()<<"\n";
+////    }
+////    stream<<"\n";
 
-void MainWindow::on_spinBox_valueChanged(int arg1)
+//}
+
+//void MainWindow::on_spinBox_valueChanged(int arg1)
+//{
+
+//}
+
+//void MainWindow::on_pushButton_8_clicked()
+//{
+
+//}
+
+void MainWindow::on_order_clicked() //zmiana order
 {
-
-}
-
-void MainWindow::on_pushButton_8_clicked()
-{
-
-}
-
-void MainWindow::on_pushButton_2_clicked() //zmiana offset i angle
-{
-    if(ui->radioButton->isChecked())
+    if(ui->bvh->isChecked())
     {
         if(main_data.h_bvh.joints.size()<=0)
         {
             return;
         }
-        int temp;
+        int temp=0;
         for (int i = 0; i <main_data.h_bvh.joints.size()  ; ++i)
         {
             if (main_data.h_bvh.joints[i].name==ui->comboBox_2->currentText().toStdString())
@@ -357,9 +286,9 @@ void MainWindow::on_pushButton_2_clicked() //zmiana offset i angle
                 break;
             }
         }
-        main_data.h_bvh.joints[temp].offset[0]=ui->line_x->text().toDouble();
-        main_data.h_bvh.joints[temp].offset[1]=ui->line_y->text().toDouble();
-        main_data.h_bvh.joints[temp].offset[2]=ui->line_z->text().toDouble();
+//        main_data.h_bvh.joints[temp].offset[0]=ui->line_x->text().toDouble();
+//        main_data.h_bvh.joints[temp].offset[1]=ui->line_y->text().toDouble();
+//        main_data.h_bvh.joints[temp].offset[2]=ui->line_z->text().toDouble();
         //main_data.calc_bvh_primary_rot_order_cords_angles(main_data.h_bvh,main_data.f_bvh);
         main_data.bvh_reorder(main_data.h_bvh,main_data.f_bvh,ui->comboBox_3->currentText().toStdString());
         main_data.bvh_positions(main_data.h_bvh,main_data.f_bvh);
@@ -371,7 +300,7 @@ void MainWindow::on_pushButton_2_clicked() //zmiana offset i angle
 
 
 
-    if(ui->radioButton_2->isChecked())
+    if(ui->asf->isChecked())
     {
         if(main_data.h_asf.joints.size()<=0)
         {
@@ -386,31 +315,31 @@ void MainWindow::on_pushButton_2_clicked() //zmiana offset i angle
                 break;
             }
         }
-        double x,y,z,l,dx,dy,dz;
+//        double x,y,z,l,dx,dy,dz;
 
-//        l=ui->line_len->text().toDouble();
-        x=ui->line_x->text().toDouble();
-        y=ui->line_y->text().toDouble();
-        z=ui->line_z->text().toDouble();
-        if (ui->comboBox_2->currentText().toStdString()==main_data.h_asf.joints[0].name)
-        {
-            main_data.h_asf.joints[temp].direction[0]=x;
+////        l=ui->line_len->text().toDouble();
+//        x=ui->line_x->text().toDouble();
+//        y=ui->line_y->text().toDouble();
+//        z=ui->line_z->text().toDouble();
+//        if (ui->comboBox_2->currentText().toStdString()==main_data.h_asf.joints[0].name)
+//        {
+//            main_data.h_asf.joints[temp].direction[0]=x;
 
-            main_data.h_asf.joints[temp].direction[1]=y;
-            main_data.h_asf.joints[temp].direction[2]=z;
-        }
-        else
-        {
-            l=sqrt(((x*x)+(y*y)+(z*z)));
-            dx=x/l;
-            dy=y/l;
-            dz=z/l;
-            main_data.h_asf.joints[temp].length=l;
-            main_data.h_asf.joints[temp].direction[0]=dx;
+//            main_data.h_asf.joints[temp].direction[1]=y;
+//            main_data.h_asf.joints[temp].direction[2]=z;
+//        }
+//        else
+//        {
+//            l=sqrt(((x*x)+(y*y)+(z*z)));
+//            dx=x/l;
+//            dy=y/l;
+//            dz=z/l;
+//            main_data.h_asf.joints[temp].length=l;
+//            main_data.h_asf.joints[temp].direction[0]=dx;
 
-            main_data.h_asf.joints[temp].direction[1]=dy;
-            main_data.h_asf.joints[temp].direction[2]=dz;
-        }
+//            main_data.h_asf.joints[temp].direction[1]=dy;
+//            main_data.h_asf.joints[temp].direction[2]=dz;
+//        }
 //        if (l>=0&&x<=1&&x>=-1&&y<=1&&y>=-1&&z<=1&&z>=-1)
 //            {
 //                main_data.h_asf.joints[temp].length=l;
@@ -429,7 +358,7 @@ void MainWindow::on_pushButton_2_clicked() //zmiana offset i angle
 
 }
 
-void MainWindow::on_radioButton_clicked()//bvh
+void MainWindow::on_bvh_clicked()//bvh
 {
     if (main_data.h_bvh.joints.size()>0)
     {
@@ -450,23 +379,23 @@ void MainWindow::on_radioButton_clicked()//bvh
        ui->treeWidget->expandAll();
        on_comboBox_currentTextChanged(ui->comboBox->currentText());
        int s_max=main_data.f_bvh.frames.size();
-       ui->horizontalSlider->setMaximum(s_max);
+       ui->slider->setMaximum(s_max);
        frame=0;
-       ui->horizontalSlider->setValue(0);
+       ui->slider->setValue(0);
        fill_table();
        draw();
     }
     else
     {
-        ui->radioButton->setChecked(false);
-        ui->radioButton_2->setChecked(true);
+        ui->bvh->setChecked(false);
+        ui->asf->setChecked(true);
         frame=0;
     }
 
 }
 
 
-void MainWindow::on_radioButton_2_clicked()//asf
+void MainWindow::on_asf_clicked()//asf
 {
     if (main_data.h_asf.joints.size()>0)
     {
@@ -490,40 +419,40 @@ void MainWindow::on_radioButton_2_clicked()//asf
        ui->treeWidget->expandAll();
        on_comboBox_currentTextChanged(ui->comboBox->currentText());
        int s_max=main_data.f_amc.frames.size();
-       ui->horizontalSlider->setMaximum(s_max);
+       ui->slider->setMaximum(s_max);
        frame=0;
-       ui->horizontalSlider->setValue(0);
+       ui->slider->setValue(0);
        fill_table();
        draw();
     }
 
     else
     {
-        ui->radioButton->setChecked(true);
-        ui->radioButton_2->setChecked(false);
+        ui->bvh->setChecked(true);
+        ui->asf->setChecked(false);
         frame=0;
     }
 }
 
-void MainWindow::on_horizontalSlider_sliderMoved(int position)
+void MainWindow::on_slider_sliderMoved(int position)
 {
     frame=position;
     draw();
 }
 
-void MainWindow::on_comboBox_2_editTextChanged(const QString &arg1)
-{
+//void MainWindow::on_comboBox_2_editTextChanged(const QString &arg1)
+//{
 
 
-}
+//}
 
 void MainWindow::on_comboBox_2_currentTextChanged(const QString &arg1)
 {
 
     //dla bvh
-    if(ui->radioButton->isChecked())
+    if(ui->bvh->isChecked())
     {
-        int temp;
+        int temp=0;
         for (int i = 0; i <main_data.h_bvh.joints.size()  ; ++i) {
             if (main_data.h_bvh.joints[i].name==arg1.toStdString()){
                 temp=i;
@@ -560,9 +489,9 @@ void MainWindow::on_comboBox_2_currentTextChanged(const QString &arg1)
     }
 
     //dla asf
-    if(ui->radioButton_2->isChecked())
+    if(ui->asf->isChecked())
     {
-        int temp;
+        int temp=0;
         for (int i = 0; i <main_data.h_asf.joints.size()  ; ++i) {
             if (main_data.h_asf.joints[i].name==arg1.toStdString()){
                 temp=i;
@@ -611,7 +540,7 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 
 
 
-    if(ui->radioButton->isChecked())
+    if(ui->bvh->isChecked())
     {
         //qDebug()<<"udududu\n";
         //QPoint global_pos=ui->treeWidget->mapToGlobal(pos);
@@ -656,10 +585,10 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
             }
            if(action->text().toStdString()==myaction0->text().toStdString())
            {
-               qDebug()<<"dodaj joint powyżej bvh\n";
+               //qDebug()<<"dodaj joint powyżej bvh\n";
                 bool ok;
                 string new_name;
-                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("User name:"), QLineEdit::Normal, "", &ok);
+                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New Joint"), QLineEdit::Normal, "", &ok);
                 if (ok && !name.isEmpty())
                 {
                     new_name=name.toStdString();
@@ -697,11 +626,11 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 
             if(action->text().toStdString()==myaction1->text().toStdString())
             {
-                qDebug()<<"dodaj joint poniżej bvh\n";
+                //qDebug()<<"dodaj joint poniżej bvh\n";
 
                 bool ok;
                 string new_name;
-                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("User name:"), QLineEdit::Normal, "", &ok);
+                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New Joint"), QLineEdit::Normal, "", &ok);
                 if (ok && !name.isEmpty())
                 {
                     new_name=name.toStdString();
@@ -739,11 +668,11 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 
             if(action->text().toStdString()==myaction2->text().toStdString())
             {
-                qDebug()<<"zmień nazwę bvh\n";
+                //qDebug()<<"zmień nazwę bvh\n";
 
                 bool ok;
                 string new_name;
-                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("User name:"), QLineEdit::Normal, "", &ok);
+                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New Name"), QLineEdit::Normal, "", &ok);
                 if (ok && !name.isEmpty())
                 {
                     new_name=name.toStdString();
@@ -776,12 +705,13 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
                 main_data.bvh_positions(main_data.h_bvh,main_data.f_bvh);
                 on_comboBox_currentTextChanged(ui->comboBox->currentText());
                // main_data.bvh_pc_index(main_data.h_bvh,main_data.f_bvh);
+                draw();
             }
 
 
             if(action->text().toStdString()==myaction3->text().toStdString())
             {
-                qDebug()<<"usuń bvh\n";
+                //qDebug()<<"usuń bvh\n";
 
                 main_data.bvh_remove_joint(main_data.h_bvh,main_data.f_bvh,text);
 
@@ -793,14 +723,18 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
                 ui->comboBox_2->clear();
 
 
-                for (int i = 0; i < main_data.h_bvh.joints.size(); ++i) {
-
+                for (int i = 0; i < main_data.h_bvh.joints.size(); ++i)
+                {
                 ui->comboBox->addItem(QString::fromStdString(main_data.h_bvh.joints[i].name));
                 ui->comboBox_2->addItem(QString::fromStdString(main_data.h_bvh.joints[i].name));
                 }
                 ui->comboBox->blockSignals(false);
                 ui->comboBox_2->blockSignals(false);
                 ui->treeWidget->expandAll();
+                main_data.bvh_positions(main_data.h_bvh,main_data.f_bvh);
+                on_comboBox_currentTextChanged(ui->comboBox->currentText());
+               // main_data.bvh_pc_index(main_data.h_bvh,main_data.f_bvh);
+                draw();
             }
 
             if(action->text().toStdString()==myaction4->text().toStdString())
@@ -809,7 +743,7 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 
                 bool ok;
                 string new_name;
-                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("Name:"), QLineEdit::Normal, "", &ok);
+                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New Parent"), QLineEdit::Normal, "", &ok);
                 if (ok && !name.isEmpty())
                 {
                     new_name=name.toStdString();
@@ -841,11 +775,13 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
                 ui->treeWidget->expandAll();
                 main_data.bvh_positions(main_data.h_bvh,main_data.f_bvh);
                 on_comboBox_currentTextChanged(ui->comboBox->currentText());
+               // main_data.bvh_pc_index(main_data.h_bvh,main_data.f_bvh);
+                draw();
             }
         }
     }
-    ////////////////////////////////////////////////////////////////////////////////////////////            asf
-    if(ui->radioButton_2->isChecked())
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////            asf
+    if(ui->asf->isChecked())
     {
         if(main_data.h_asf.joints.size()<=0)
         {
@@ -860,87 +796,47 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
         string text= itm->text(0).toStdString();//nazwa jointa
 
         if (text!=main_data.h_asf.root.name)
-        { //dla roota nic nie dodawać
+        { //dla roota nic nie dodawać        
         QMenu *menu=new QMenu(ui->treeWidget);
-        QAction *myaction1  = new QAction("dodaj joint",this);
-        QAction *myaction2  = new QAction("usuń joint",this);
-        QAction *myaction3  = new QAction("zmień nazwę",this);
+        QAction *myaction0  = new QAction("dodaj joint powyżej",this);
+        QAction *myaction1  = new QAction("dodaj joint poniżej",this);
+        QAction *myaction2  = new QAction("zmień nazwę",this);
+        QAction *myaction3  = new QAction("usuń joint",this);
+        QAction *myaction4  = new QAction("zmień rodzica",this);
+        menu->addAction(myaction0);
         menu->addAction(myaction1);
         menu->addAction(myaction2);
         menu->addAction(myaction3);
+        menu->addAction(myaction4);//comment tymczsowy
+        //  connect(myaction1, SIGNAL(triggered()), this, SLOT(newDev()));//chyba wywalić
+        //  connect(myaction2, SIGNAL(triggered()), this, SLOT(newDev()));
+        //  connect(myaction3, SIGNAL(triggered()), this, SLOT(newDev()));
         QAction *action =menu->exec((QCursor::pos()));
         if(action==0)
         {
-        return;
+            return;
         }
 
-
-        if(action->text().toStdString()==myaction1->text().toStdString())
+        if(action->text().toStdString()==myaction0->text().toStdString())
         {//dodanie zmienić z bvh na asf
-            qDebug()<<"dodaj joint asf\n";
-            joint_asf joint;
+
+
             bool ok;
             string new_name;
-            QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("User name:"), QLineEdit::Normal, "", &ok);
-
+            QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New Bone"), QLineEdit::Normal, "", &ok);
             if (ok && !name.isEmpty())
             {
                 new_name=name.toStdString();
             }
+            else
+            {
+                return;
+            }
 
-            joint.name=new_name;
-            int j=0; //index wzywanego
-            while(main_data.h_asf.joints[j].name!=text)
-            {
-                j++;
-            }
-            joint.axis=main_data.h_asf.joints[j].axis;
-            joint.axis_order=main_data.h_asf.joints[j].axis_order;
-            joint.children.push_back(text);
-            joint.direction=main_data.h_asf.joints[j].direction;
-            joint.dof=main_data.h_asf.joints[j].dof;
-            joint.dof_num=main_data.h_asf.joints[j].dof_num;
-            joint.id=main_data.h_asf.joints[j].id;
-            joint.length=main_data.h_asf.joints[j].length;
-            joint.limits=main_data.h_asf.joints[j].limits;
-            joint.parent=main_data.h_asf.joints[j].parent;
-            string parent=main_data.h_asf.joints[j].parent;
+            //qDebug()<<"dodaj joint asf\n";
 
-            int p=0;//indeks parent wzywanego
-            while(main_data.h_asf.joints[p].name!=parent)
-            {
-                p++;
-            }
-            for(int i=0;i<main_data.h_asf.joints[p].children.size();++i)
-            {
-                if(main_data.h_asf.joints[p].children[i]==text)
-                {
-                    main_data.h_asf.joints[p].children[i]=new_name;
-                }
 
-            }
-            main_data.h_asf.root.children=main_data.h_asf.joints[0].children;
-            main_data.h_asf.joints[j].parent=new_name;
-            main_data.h_asf.joints.insert(main_data.h_asf.joints.begin()+j,joint);
-            for (int i = 0; i < main_data.h_asf.joints.size(); ++i)
-            {
-                main_data.h_asf.joints[i].id=i;
-            }
-            main_data.h_asf.root.children=main_data.h_asf.joints[0].children;
-            /////dodanie danych do ramek;
-
-            joint_data t_data;
-            for (int i = 0; i < main_data.h_asf.joints[j].dof_num; ++i)
-            {
-                t_data.channels.push_back(0);
-            }
-            t_data.id=main_data.h_asf.joints[j].id;
-            t_data.name=new_name;
-
-            for (int i = 0; i < main_data.f_amc.frames.size(); ++i)
-            {
-                main_data.f_amc.frames[i].channel_data.insert(main_data.f_amc.frames[i].channel_data.begin()+j ,t_data);
-            }
+            main_data.asf_add_joint_above(main_data.h_asf,main_data.f_amc,new_name,text);
 
 
 
@@ -961,71 +857,33 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
             ui->comboBox->blockSignals(false);
             ui->comboBox_2->blockSignals(false);
             ui->treeWidget->expandAll();
+            main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
             main_data.asf_position(main_data.h_asf,main_data.f_amc);
             on_comboBox_currentTextChanged(ui->comboBox->currentText());
-            main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
+            fill_table();
+            draw();
+
         }
 
 
-        if(action->text().toStdString()==myaction2->text().toStdString())
+        if(action->text().toStdString()==myaction1->text().toStdString()) // asf add below
         {
-            qDebug()<<"usuń joint asf\n";
-            int i=0;
-            while(main_data.h_asf.joints[i].name!=text)
-            {//indeks usuwanego jointa
-                i++;
-            }
-            string parent= main_data.h_asf.joints[i].parent;
-            vector<string> kids;
-            for (int j = 0; j < main_data.h_asf.joints[i].children.size(); ++j)
-            {//pozyskanie dzieci
-                kids.push_back(main_data.h_asf.joints[i].children[j]);
-            }
-            int p=0;
-            while(main_data.h_asf.joints[p].name!=parent)
-            {//znajdź parenta
-                p++;
-            }
-            for (int j = 0; j < kids.size(); ++j)
-            {//przypisanie dzieci do parenta
-                main_data.h_asf.joints[p].children.push_back(kids[j]);
-                int k=0;
-                while(main_data.h_asf.joints[k].name!=kids[j])
-                {//znajdź parenta
-                k++;
-                }
-                main_data.h_asf.joints[k].parent=parent;
-            }
-            int h=0;
-            while (main_data.h_asf.joints[p].children[h]!=text)
+            bool ok;
+            string new_name;
+            QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New bone"), QLineEdit::Normal, "", &ok);
+            if (ok && !name.isEmpty())
             {
-                h++;
+                new_name=name.toStdString();
             }
-            main_data.h_asf.joints[p].children.erase(main_data.h_asf.joints[p].children.begin()+h);
-            main_data.h_asf.joints.erase(main_data.h_asf.joints.begin()+ i);
-            for (int iter = 0; iter < main_data.h_asf.joints.size(); ++iter)
+            else
             {
-                main_data.h_asf.joints[iter].id=iter;
+                return;
             }
-            main_data.h_asf.root.children=main_data.h_asf.joints[0].children;
 
-            if (main_data.h_asf.joints[i].dof.size()!=0)
-            {
+            //qDebug()<<"dodaj joint asf\n";
 
-                int q=0;
-                while (main_data.f_amc.frames[0].channel_data[q].name!=text)
-                {
-                q++;
-                }
-                for (int f = 0; f < main_data.f_amc.frames.size(); ++f)
-                {
-                /* int q=0;
-                while(main_data.f_amc.frames[f].channel_data[q].name!=text){
-                q++;
-                }*/
-                    main_data.f_amc.frames[f].channel_data.erase( main_data.f_amc.frames[f].channel_data.begin()+q);
-                }
-            }
+            main_data.asf_add_joint_below(main_data.h_asf,main_data.f_amc,new_name,text);
+
             ui->treeWidget->clear();
             AddRoot_asf(QString::fromStdString(main_data.h_asf.root.name));
             ui->comboBox->blockSignals(true);
@@ -1043,85 +901,28 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
             ui->comboBox->blockSignals(false);
             ui->comboBox_2->blockSignals(false);
             ui->treeWidget->expandAll();
+            main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
             main_data.asf_position(main_data.h_asf,main_data.f_amc);
             on_comboBox_currentTextChanged(ui->comboBox->currentText());
-            main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
+            fill_table();
+            draw();
         }
 
 
-            if(action->text().toStdString()==myaction3->text().toStdString())
+            if(action->text().toStdString()==myaction2->text().toStdString())
             {
-                qDebug()<<"zmień nazwę asf\n";
+                //qDebug()<<"zmień nazwę asf\n";
                 bool ok;
                 string new_name;
-                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("User name:"), QLineEdit::Normal, QDir::home().dirName(), &ok);
+                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New Name"), QLineEdit::Normal, QDir::home().dirName(), &ok);
                 if (ok && !name.isEmpty())
                 {
                     new_name=name.toStdString();
 
                 }
-                int i=0;
-                while(main_data.h_asf.joints[i].name!=text)
-                {//indeks usuwanego jointa
-                    i++;
-                }
-                string parent= main_data.h_asf.joints[i].parent;
-                vector<string> kids;
-                for (int j = 0; j < main_data.h_asf.joints[i].children.size(); ++j)
-                {//pozyskanie dzieci
-                    kids.push_back(main_data.h_asf.joints[i].children[j]);
-                }
-                int p=0;
-                while(main_data.h_asf.joints[p].name!=parent)
-                {//znajdź parenta
-                    p++;
-                }
-                if(parent==main_data.h_asf.root.name)
-                {
-                    for (int j = 0; j < main_data.h_asf.root.children.size(); ++j)
-                    {
-                        if(main_data.h_asf.root.children[j]==text)
-                        {
-                        main_data.h_asf.root.children[j]=new_name;
-                        break;
-                        }
-                    }
-                }
-                for (int j = 0; j < main_data.h_asf.joints[p].children.size(); ++j)
-                {
-                    if(main_data.h_asf.joints[p].children[j]==text)
-                    {
-                        main_data.h_asf.joints[p].children[j]=new_name;
-                    }
-                }
-                for (int j = 0; j < kids.size(); ++j)
-                {
-                    int y=0;
-                    while(main_data.h_asf.joints[y].name!=kids[j])
-                    {
-                        y++;
-                    }
-                    main_data.h_asf.joints[y].parent=new_name;
-                }
 
-                main_data.h_asf.joints[i].name=new_name;
-                main_data.h_asf.root.children=main_data.h_asf.joints[0].children;
-                if (main_data.h_asf.joints[i].dof.size()==0)
-                {
-                    int q=0;
-                    while (main_data.f_amc.frames[0].channel_data[q].name!=text)
-                    {
-                        q++;
-                    }
-                    for (int f = 0; f < main_data.f_amc.frames.size(); ++f)
-                    {
-                    /* int q=0;
-                    while(main_data.f_amc.frames[f].channel_data[q].name!=text){
-                    q++;
-                    }*/
-                        main_data.f_amc.frames[f].channel_data[q].name=new_name;
-                    }
-                }
+                main_data.asf_change_name(main_data.h_asf,main_data.f_amc,text,new_name);
+
                 ui->treeWidget->clear();
                 AddRoot_asf(QString::fromStdString(main_data.h_asf.root.name));
                 ui->comboBox->blockSignals(true);
@@ -1139,9 +940,81 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
                 ui->comboBox->blockSignals(false);
                 ui->comboBox_2->blockSignals(false);
                 ui->treeWidget->expandAll();
+                main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
+                main_data.asf_position(main_data.h_asf,main_data.f_amc);
+                on_comboBox_currentTextChanged(ui->comboBox->currentText());
+                fill_table();
+                draw();
 
             }
+            if(action->text().toStdString()==myaction3->text().toStdString())
+            {
 
+
+                main_data.asf_remove_joint(main_data.h_asf,main_data.f_amc,text);
+
+                ui->treeWidget->clear();
+                AddRoot_asf(QString::fromStdString(main_data.h_asf.root.name));
+                ui->comboBox->blockSignals(true);
+                ui->comboBox_2->blockSignals(true);
+                ui->comboBox->clear();
+                ui->comboBox_2->clear();
+
+
+                for (int i = 0; i < main_data.h_asf.joints.size(); ++i)
+                {
+                    ui->comboBox->addItem(QString::fromStdString(main_data.h_asf.joints[i].name));
+                    ui->comboBox_2->addItem(QString::fromStdString(main_data.h_asf.joints[i].name));
+                }
+                ui->comboBox->blockSignals(false);
+                ui->comboBox_2->blockSignals(false);
+                ui->treeWidget->expandAll();
+                main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
+                main_data.asf_position(main_data.h_asf,main_data.f_amc);
+                on_comboBox_currentTextChanged(ui->comboBox->currentText());
+                fill_table();
+                draw();
+
+            }
+            if(action->text().toStdString()==myaction4->text().toStdString())
+            {
+                bool ok;
+                string new_name;
+                QString name=QInputDialog::getText(this, tr("QInputDialog::getText()"),tr("New Parent"), QLineEdit::Normal, "", &ok);
+                if (ok && !name.isEmpty())
+                {
+                    new_name=name.toStdString();
+                }
+                else
+                {
+                    return;
+                }
+
+                main_data.asf_change_parent(main_data.h_asf,main_data.f_amc,text,new_name);
+
+                ui->treeWidget->clear();
+                AddRoot_asf(QString::fromStdString(main_data.h_asf.root.name));
+                ui->comboBox->blockSignals(true);
+                ui->comboBox_2->blockSignals(true);
+                ui->comboBox->clear();
+                ui->comboBox_2->clear();
+
+
+                for (int i = 0; i < main_data.h_asf.joints.size(); ++i)
+                {
+                    ui->comboBox->addItem(QString::fromStdString(main_data.h_asf.joints[i].name));
+                    ui->comboBox_2->addItem(QString::fromStdString(main_data.h_asf.joints[i].name));
+                }
+                ui->comboBox->blockSignals(false);
+                ui->comboBox_2->blockSignals(false);
+                ui->treeWidget->expandAll();
+                main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
+                main_data.asf_position(main_data.h_asf,main_data.f_amc);
+                on_comboBox_currentTextChanged(ui->comboBox->currentText());
+                fill_table();
+                draw();
+
+            }
 
 
 
@@ -1157,153 +1030,153 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
 }
 
 
-void MainWindow::test()
-{
-//    QVector<Vertex> array;                        kod zmienia między trujkątem a kwadratem
-//    if(ui->openGLWidget_2->flaga=="cube")
-//    {
-//        array=triangle;
-//        ui->openGLWidget_2->flaga="triangle";
-//    }
-//    else
-//    {
-//        array=cube;
-//        ui->openGLWidget_2->flaga="cube";
-//    }
+//void MainWindow::test()
+//{
+////    QVector<Vertex> array;                        kod zmienia między trujkątem a kwadratem
+////    if(ui->openGLWidget_2->flaga=="cube")
+////    {
+////        array=triangle;
+////        ui->openGLWidget_2->flaga="triangle";
+////    }
+////    else
+////    {
+////        array=cube;
+////        ui->openGLWidget_2->flaga="cube";
+////    }
 
-//    ui->openGLWidget_2->refresh(array);
-
-
+////    ui->openGLWidget_2->refresh(array);
 
 
 
-//    QVector<Vertex> full_vertex_vector;
 
 
-//   Vertex y_rot = Vertex( QVector3D(  0.0f,  0.0f,  0.3f), QVector3D( 1.0f, 0.0f, 0.0f ) );
-//   Vertex x_rot = Vertex( QVector3D(  0.0f,  0.3f,  0.0f), QVector3D( 0.0f, 1.0f, 0.0f ) );
-//   //Vertex z_rot = Vertex( QVector3D(  0.3f,  0.0f,  0.0f), QVector3D( 0.0f, 0.0f, 1.0f ) );
+////    QVector<Vertex> full_vertex_vector;
 
-//   QVector<Vertex> x_vert;
-//   QVector<Vertex> y_vert;
-//  // QVector<Vertex> z_vert;
 
-//   QMatrix4x4 tm;
-//   //tm.setColumn(3,);
-//   for (int i = 0; i < 36; ++i)
-//   {
-//       Vertex temp_x;
-//       Vertex temp_y;
-//       //Vertex temp_z;
-//       QMatrix4x4 mat;
+////   Vertex y_rot = Vertex( QVector3D(  0.0f,  0.0f,  0.3f), QVector3D( 1.0f, 0.0f, 0.0f ) );
+////   Vertex x_rot = Vertex( QVector3D(  0.0f,  0.3f,  0.0f), QVector3D( 0.0f, 1.0f, 0.0f ) );
+////   //Vertex z_rot = Vertex( QVector3D(  0.3f,  0.0f,  0.0f), QVector3D( 0.0f, 0.0f, 1.0f ) );
 
-//       temp_x=x_rot;
-//       mat.setToIdentity();
-//       mat.rotate(i*10,1,0,0);
-//       temp_x.setPosition(mat*temp_x.position());
-//       x_vert.push_back(temp_x);
+////   QVector<Vertex> x_vert;
+////   QVector<Vertex> y_vert;
+////  // QVector<Vertex> z_vert;
 
-//       temp_y=y_rot;
-//       mat.setToIdentity();
-//       mat.rotate(i*10,0,1,0);
-//       temp_y.setPosition(mat*temp_y.position());
-//       y_vert.push_back(temp_y);
+////   QMatrix4x4 tm;
+////   //tm.setColumn(3,);
+////   for (int i = 0; i < 36; ++i)
+////   {
+////       Vertex temp_x;
+////       Vertex temp_y;
+////       //Vertex temp_z;
+////       QMatrix4x4 mat;
 
-////       temp_z=z_rot;
+////       temp_x=x_rot;
 ////       mat.setToIdentity();
-////       mat.rotate(i*10,0,0,1);
-////       temp_z.setPosition(mat*temp_z.position());
-////       z_vert.push_back(temp_z);
-//   }
-//   QVector3D test_vec(4.0f,1.0f,2.0f);
-//   QVector3D test_start(0.0f,0.0f,0.0f);
-//   QVector3D test_up(0.0f,1.0f,0.0f);
-//   QMatrix4x4 test_mat;
-//   test_mat.setToIdentity();
-//   test_mat.lookAt(test_start,test_vec,test_up);
+////       mat.rotate(i*10,1,0,0);
+////       temp_x.setPosition(mat*temp_x.position());
+////       x_vert.push_back(temp_x);
+
+////       temp_y=y_rot;
+////       mat.setToIdentity();
+////       mat.rotate(i*10,0,1,0);
+////       temp_y.setPosition(mat*temp_y.position());
+////       y_vert.push_back(temp_y);
+
+//////       temp_z=z_rot;
+//////       mat.setToIdentity();
+//////       mat.rotate(i*10,0,0,1);
+//////       temp_z.setPosition(mat*temp_z.position());
+//////       z_vert.push_back(temp_z);
+////   }
+////   QVector3D test_vec(4.0f,1.0f,2.0f);
+////   QVector3D test_start(0.0f,0.0f,0.0f);
+////   QVector3D test_up(0.0f,1.0f,0.0f);
+////   QMatrix4x4 test_mat;
+////   test_mat.setToIdentity();
+////   test_mat.lookAt(test_start,test_vec,test_up);
 
 
-//   QVector<Vertex> x_vert_prim;
-//   QVector<Vertex> y_vert_prim;
-//   QVector<Vertex> z_vert_prim;
+////   QVector<Vertex> x_vert_prim;
+////   QVector<Vertex> y_vert_prim;
+////   QVector<Vertex> z_vert_prim;
 
-//   for (int i = 0; i < 36; ++i)
-//   {
-//       Vertex temp_x=x_vert[i];
-//       Vertex temp_y=y_vert[i];
-////      Vertex temp_z=z_vert[i];
-//       QMatrix4x4 mat;
-//       mat.setToIdentity();
-//       mat.translate(0,1,0);
-
-
-//       temp_x.setPosition(mat*temp_x.position());
-//      x_vert_prim.push_back(temp_x);
+////   for (int i = 0; i < 36; ++i)
+////   {
+////       Vertex temp_x=x_vert[i];
+////       Vertex temp_y=y_vert[i];
+//////      Vertex temp_z=z_vert[i];
+////       QMatrix4x4 mat;
+////       mat.setToIdentity();
+////       mat.translate(0,1,0);
 
 
-//       temp_y.setPosition(mat*temp_y.position());
-//       y_vert_prim.push_back(temp_y);
+////       temp_x.setPosition(mat*temp_x.position());
+////      x_vert_prim.push_back(temp_x);
 
 
-//      // temp_z.setPosition(mat*temp_z.position());
-//      // z_vert_prim.push_back(temp_z);
-
-//   }
-
-//   for (int i = 0; i < 36; ++i)
-//   {
-//       int n=i;
-//       int m=i+1;
-//       if (m>=36)
-//       {
-//           m=0;
-//       }
-//       //x_cc
-//       full_vertex_vector.push_back(x_vert_prim[n]);
-//       full_vertex_vector.push_back(x_vert[n]);
-//       full_vertex_vector.push_back(x_vert[m]);
-
-//       full_vertex_vector.push_back(x_vert_prim[m]);
-//       full_vertex_vector.push_back(x_vert_prim[n]);
-//       full_vertex_vector.push_back(x_vert[m]);
-
-//       //x_c
-//       full_vertex_vector.push_back(x_vert_prim[n]);
-//       full_vertex_vector.push_back(x_vert[m]);
-//       full_vertex_vector.push_back(x_vert[n]);
-
-//       full_vertex_vector.push_back(x_vert_prim[m]);
-//       full_vertex_vector.push_back(x_vert[m]);
-//       full_vertex_vector.push_back(x_vert_prim[n]);
-
-//       //y_cc
-//       full_vertex_vector.push_back(y_vert_prim[n]);
-//       full_vertex_vector.push_back(y_vert[n]);
-//       full_vertex_vector.push_back(y_vert[m]);
-
-//       full_vertex_vector.push_back(y_vert_prim[m]);
-//       full_vertex_vector.push_back(y_vert_prim[n]);
-//       full_vertex_vector.push_back(y_vert[m]);
-
-//       //y_c
-//       full_vertex_vector.push_back(y_vert_prim[n]);
-//       full_vertex_vector.push_back(y_vert[m]);
-//       full_vertex_vector.push_back(y_vert[n]);
-
-//       full_vertex_vector.push_back(y_vert_prim[m]);
-//       full_vertex_vector.push_back(y_vert[m]);
-//       full_vertex_vector.push_back(y_vert_prim[n]);
+////       temp_y.setPosition(mat*temp_y.position());
+////       y_vert_prim.push_back(temp_y);
 
 
-//   }
+////      // temp_z.setPosition(mat*temp_z.position());
+////      // z_vert_prim.push_back(temp_z);
 
-//    ui->openGLWidget_2->refresh(full_vertex_vector,1);
+////   }
+
+////   for (int i = 0; i < 36; ++i)
+////   {
+////       int n=i;
+////       int m=i+1;
+////       if (m>=36)
+////       {
+////           m=0;
+////       }
+////       //x_cc
+////       full_vertex_vector.push_back(x_vert_prim[n]);
+////       full_vertex_vector.push_back(x_vert[n]);
+////       full_vertex_vector.push_back(x_vert[m]);
+
+////       full_vertex_vector.push_back(x_vert_prim[m]);
+////       full_vertex_vector.push_back(x_vert_prim[n]);
+////       full_vertex_vector.push_back(x_vert[m]);
+
+////       //x_c
+////       full_vertex_vector.push_back(x_vert_prim[n]);
+////       full_vertex_vector.push_back(x_vert[m]);
+////       full_vertex_vector.push_back(x_vert[n]);
+
+////       full_vertex_vector.push_back(x_vert_prim[m]);
+////       full_vertex_vector.push_back(x_vert[m]);
+////       full_vertex_vector.push_back(x_vert_prim[n]);
+
+////       //y_cc
+////       full_vertex_vector.push_back(y_vert_prim[n]);
+////       full_vertex_vector.push_back(y_vert[n]);
+////       full_vertex_vector.push_back(y_vert[m]);
+
+////       full_vertex_vector.push_back(y_vert_prim[m]);
+////       full_vertex_vector.push_back(y_vert_prim[n]);
+////       full_vertex_vector.push_back(y_vert[m]);
+
+////       //y_c
+////       full_vertex_vector.push_back(y_vert_prim[n]);
+////       full_vertex_vector.push_back(y_vert[m]);
+////       full_vertex_vector.push_back(y_vert[n]);
+
+////       full_vertex_vector.push_back(y_vert_prim[m]);
+////       full_vertex_vector.push_back(y_vert[m]);
+////       full_vertex_vector.push_back(y_vert_prim[n]);
 
 
-}
+////   }
 
-void MainWindow::test_1()
-{
+////    ui->openGLWidget_2->refresh(full_vertex_vector,1);
+
+
+//}
+
+//void MainWindow::test_1()
+//{
 
 //        QVector<Vertex> full_vertex_vector;
 //        QVector<Vertex> bottom;
@@ -1381,7 +1254,7 @@ void MainWindow::test_1()
         
 
 //             ui->openGLWidget_2->refresh(full_vertex_vector,0);
-}
+//}
 
 void MainWindow::draw()
 {
@@ -1419,7 +1292,7 @@ void MainWindow::draw()
 
         //bvh
         int color = 0.5;
-        if (ui->radioButton->isChecked())
+        if (ui->bvh->isChecked())
         {
             for (int i = 0; i < main_data.h_bvh.joints.size(); ++i)
             {
@@ -1495,7 +1368,7 @@ void MainWindow::draw()
          ui->openGLWidget_2->refresh(full_vertex_vector,0);
         }
         //asf
-        if (ui->radioButton_2->isChecked())
+        if (ui->asf->isChecked())
         {
             for (int i = 0; i < main_data.h_asf.joints.size(); ++i)
             {
@@ -1573,7 +1446,7 @@ void MainWindow::draw()
     if (ui->openGLWidget_2->lines)
     {
 
-        if(ui->radioButton->isChecked())
+        if(ui->bvh->isChecked())
         {
             for (int i = 0; i < main_data.h_bvh.joints.size(); ++i)
             {
@@ -1589,7 +1462,7 @@ void MainWindow::draw()
             }
             ui->openGLWidget_2->refresh(full_vertex_vector,0);
         }
-        if(ui->radioButton_2->isChecked())
+        if(ui->asf->isChecked())
         {
             for (int i = 0; i < main_data.h_asf.joints.size(); ++i)
             {
@@ -1617,7 +1490,7 @@ void MainWindow::draw()
 
 void MainWindow::frame_iter()
 {
-    if (ui->radioButton->isChecked())
+    if (ui->bvh->isChecked())
     {
         if (main_data.h_bvh.joints.size()>0)
         {
@@ -1630,7 +1503,7 @@ void MainWindow::frame_iter()
             draw();
         }
     }
-    if(ui->radioButton_2->isChecked())
+    if(ui->asf->isChecked())
     {
         if (main_data.h_asf.joints.size()>0)
         {
@@ -1643,31 +1516,31 @@ void MainWindow::frame_iter()
             draw();
         }
     }
-    ui->horizontalSlider->setValue(frame);
+    ui->slider->setValue(frame);
 
 }
 
-void MainWindow::t_out()
-{
-    qDebug()<<"tout"<<"\n";
-}
+//void MainWindow::t_out()
+//{
+//    //qDebug()<<"tout"<<"\n";
+//}
 
-void MainWindow::test_matrix(QMatrix4x4 matrix)
-{
-    qDebug()<<matrix<<"\n";
-}
+//void MainWindow::test_matrix(QMatrix4x4 matrix)
+//{
+//    //qDebug()<<matrix<<"\n";
+//}
 
-void MainWindow::setup_table()
-{
-    ui->tableWidget = new QTableWidget(this);
+//void MainWindow::setup_table()
+//{
+//    ui->tableWidget = new QTableWidget(this);
 
-}
+//}
 
 void MainWindow::fill_table()
 {
     ui->tableWidget->clear();
 
-    if (ui->radioButton->isChecked())
+    if (ui->bvh->isChecked())
     {
         ui->tableWidget->setColumnCount(6);
         ui->tableWidget->setRowCount(main_data.h_bvh.joints[0].cords.size());
@@ -1734,7 +1607,7 @@ void MainWindow::fill_table()
 
     }
 
-    if (ui->radioButton_2->isChecked())
+    if (ui->asf->isChecked())
     {
         ui->tableWidget->setColumnCount(6);
         ui->tableWidget->setRowCount(main_data.h_asf.joints[0].cords.size());
@@ -1784,12 +1657,12 @@ void MainWindow::fill_table()
 
     }
 
-
+    ui->tableWidget->resizeColumnsToContents();
 }
 
 void MainWindow::graph(string text)
 {
-    if(ui->radioButton->isChecked())
+    if(ui->bvh->isChecked())
     {
 
         vector<double> x;
@@ -1911,7 +1784,7 @@ void MainWindow::graph(string text)
 
 }
 
-    if(ui->radioButton_2->isChecked()){
+    if(ui->asf->isChecked()){
 
         vector<double> x;
         vector<double> y;
@@ -2029,10 +1902,10 @@ void MainWindow::graph(string text)
     }
 }
 
-void MainWindow::tree(QString name)
-{
+//void MainWindow::tree(QString name)
+//{
 
-}
+//}
 
 
 
@@ -2046,10 +1919,10 @@ void MainWindow::showPointToolTip1(QMouseEvent *event){
 
 
 
-void MainWindow::show_about(QAction *Action)
-{
-    qDebug()<<"showAbout\n";
-}
+//void MainWindow::show_about(QAction *Action)
+//{
+//    //qDebug()<<"showAbout\n";
+//}
 
 
 
@@ -2106,51 +1979,51 @@ void MainWindow::on_positionZ_stateChanged(int arg1)
 
 
 
-void MainWindow::test_QMatrix4x4(){
-//QMatrix4x4 matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+//void MainWindow::test_QMatrix4x4(){
+////QMatrix4x4 matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
 
-float tab[4][4];
-QMatrix4x4 matrix;
-QMatrix4x4 invert;
-matrix.setToIdentity();
+//float tab[4][4];
+//QMatrix4x4 matrix;
+//QMatrix4x4 invert;
+//matrix.setToIdentity();
 
-//matrix.translate(1,2,3);
-matrix.rotate(30,1,0,0);
-matrix.rotate(60,0,1,0);
-matrix.rotate(90,0,0,1);
+////matrix.translate(1,2,3);
+//matrix.rotate(30,1,0,0);
+//matrix.rotate(60,0,1,0);
+//matrix.rotate(90,0,0,1);
 
-    for (int i = 0; i < 4; ++i) {
-        QVector4D vect=matrix.row(i);
-        qDebug()<<vect.x()<<vect.y()<<vect.z()<<vect.w();
-        tab[i][0]=vect.x();
-        tab[i][1]=vect.y();
-        tab[i][2]=vect.z();
-        tab[i][3]=vect.w();
-    }
-qDebug()<<QString::fromStdString(" ");
-invert=matrix.inverted();
-        for (int i = 0; i < 4; ++i) {
-            QVector4D vect=invert.row(i);
-            qDebug()<<vect.x()<<vect.y()<<vect.z()<<vect.w();
-            tab[i][0]=vect.x();
-            tab[i][1]=vect.y();
-            tab[i][2]=vect.z();
-            tab[i][3]=vect.w();
-        }
-        qDebug()<<QString::fromStdString(" ");
-  matrix=invert*matrix;
-  for (int i = 0; i < 4; ++i) {
-      QVector4D vect=matrix.row(i);
-      qDebug()<<vect.x()<<vect.y()<<vect.z()<<vect.w();
-      tab[i][0]=vect.x();
-      tab[i][1]=vect.y();
-      tab[i][2]=vect.z();
-      tab[i][3]=vect.w();
-  }
-  test_matrix(matrix);
+//    for (int i = 0; i < 4; ++i) {
+//        QVector4D vect=matrix.row(i);
+//        //qDebug()<<vect.x()<<vect.y()<<vect.z()<<vect.w();
+//        tab[i][0]=vect.x();
+//        tab[i][1]=vect.y();
+//        tab[i][2]=vect.z();
+//        tab[i][3]=vect.w();
+//    }
+////qDebug()<<QString::fromStdString(" ");
+//invert=matrix.inverted();
+//        for (int i = 0; i < 4; ++i) {
+//            QVector4D vect=invert.row(i);
+//            //qDebug()<<vect.x()<<vect.y()<<vect.z()<<vect.w();
+//            tab[i][0]=vect.x();
+//            tab[i][1]=vect.y();
+//            tab[i][2]=vect.z();
+//            tab[i][3]=vect.w();
+//        }
+//        //qDebug()<<QString::fromStdString(" ");
+//  matrix=invert*matrix;
+//  for (int i = 0; i < 4; ++i) {
+//      QVector4D vect=matrix.row(i);
+//      //qDebug()<<vect.x()<<vect.y()<<vect.z()<<vect.w();
+//      tab[i][0]=vect.x();
+//      tab[i][1]=vect.y();
+//      tab[i][2]=vect.z();
+//      tab[i][3]=vect.w();
+//  }
+//  //test_matrix(matrix);
 
 
-}
+//}
 
 void MainWindow::on_actionLoad_triggered()
 {
@@ -2165,14 +2038,29 @@ void MainWindow::on_actionLoad_triggered()
 
     QFileInfo file_info(file_name);
     QString extension=file_info.suffix();
+    fstream file;
+    file.open((file_name.toStdString()).c_str());
 
     if(extension=="bvh") // pliki z rozszerzeniem bvh
     {
-        return_bvh r_bvh;
-        QMessageBox::information(this,"..","bvh");
-        fstream file;
-        file.open((file_name.toStdString()).c_str());
+        qDebug()<<"0\n";
+        return_bvh_hierarchy_motion r_bvh;
+        qDebug()<<"1\n";
+
         r_bvh=main_data.create_bvh(file);
+        qDebug()<<"2\n";
+
+        if(r_bvh.exception.code!=0)
+        {
+            QString str=QString::fromStdString(r_bvh.exception.msg);
+            str.append(" ");
+            str.append(QString::number(r_bvh.exception.code));
+            QMessageBox::information(this,"..",str);
+            return;
+        }
+        //QMessageBox::information(this,"..","bvh");
+
+
         main_data.h_bvh=r_bvh.h_bvh;
         main_data.f_bvh=r_bvh.f_bvh;;
         file.close();
@@ -2181,8 +2069,8 @@ void MainWindow::on_actionLoad_triggered()
         //main_data.calc_bvh_primary_rot_order_cords_angles(main_data.h_bvh,main_data.f_bvh);  //versja 2.0
         main_data.bvh_positions(main_data.h_bvh,main_data.f_bvh);
 
-        ui->radioButton->setChecked(true);
-        ui->radioButton_2->setChecked(false);
+        ui->bvh->setChecked(true);
+        ui->asf->setChecked(false);
         ui->comboBox->blockSignals(true);
          ui->comboBox_2->blockSignals(true);
             ui->comboBox->clear();
@@ -2205,26 +2093,43 @@ void MainWindow::on_actionLoad_triggered()
             ui->treeWidget->expandAll();
             on_comboBox_currentTextChanged(ui->comboBox->currentText());
             int s_max=main_data.f_bvh.frames.size();
-            ui->horizontalSlider->setMaximum(s_max);
+            ui->slider->setMaximum(s_max);
             //setup_table();
             fill_table();
             ui->cylinders->setChecked(true);
             on_cylinders_clicked();
 
             double f=main_data.f_bvh.frame_time;
-            timer->setInterval(main_data.f_bvh.frame_time*1000);
+            interval=f*1000;
+            timer->setInterval(interval);
+            fps=1/f;
+            ui->frames_second->setValue(fps);
+
 //            draw();
            // stop=true;
 
     }
     if(extension=="asf"){
-        QMessageBox::information(this,"..","asf");
-        fstream file;
-        file.open((file_name.toStdString()).c_str());
-        qDebug()<<"start\n";
-        main_data.h_asf=main_data.create_asf(file);
+        //QMessageBox::information(this,"..","asf");
+                //        fstream file;
+                //        file.open((file_name.toStdString()).c_str());
+        //qDebug()<<"start\n";
+       return_asf_hierarchy_and_error r_asf;
+       r_asf=main_data.create_asf(file);
+
+       if(r_asf.exception.code!=0)
+       {
+           QString str=QString::fromStdString(r_asf.exception.msg);
+           str.append(" ");
+           str.append(QString::number(r_asf.exception.code));
+           QMessageBox::information(this,"..",str);
+           return;
+       }
+        main_data.h_asf=r_asf.h_asf;
+
         file.close();
-        qDebug()<<"wczyt asf udany\n";
+        QMessageBox::information(this,"..","asf");
+        //qDebug()<<"wczyt asf udany\n";
     //    ui->comboBox->clear();
     //    ui->comboBox_2->clear();
     //    for (int i = 0 ; i < main_data.h_asf.joints.size(); ++i) {
@@ -2232,20 +2137,20 @@ void MainWindow::on_actionLoad_triggered()
     //        ui->comboBox->addItem(QString::fromStdString(main_data.h_asf.joints[i].name));
     //        ui->comboBox_2->addItem(QString::fromStdString(main_data.h_asf.joints[i].name));
     //    }
-    //    ui->radioButton->setChecked(false);
-    //    ui->radioButton_2->setChecked(true);
+    //    ui->bvh->setChecked(false);
+    //    ui->asf->setChecked(true);
     //    ui->treeWidget->clear();
     //    AddRoot_asf(QString::fromStdString(main_data.h_asf.root.name));
     //    ui->treeWidget->expandAll();
 
-        ui->radioButton->setChecked(false);
-        ui->radioButton_2->setChecked(true);
+        ui->bvh->setChecked(false);
+        ui->asf->setChecked(true);
         ui->comboBox->blockSignals(true);
         ui->comboBox_2->blockSignals(true);
         ui->comboBox->clear();
         ui->comboBox_2->clear();
 
-        qDebug()<<"widgety1";
+        //qDebug()<<"widgety1";
 
          for (int i = 0; i < main_data.h_asf.joints.size(); ++i)
         {
@@ -2256,14 +2161,14 @@ void MainWindow::on_actionLoad_triggered()
             ui->comboBox_2->blockSignals(false);   //poprawić wczytywani bo inaczej crush
 
             ui->treeWidget->clear();
-            qDebug()<<QString::fromStdString(main_data.h_asf.root.name);
+            //qDebug()<<QString::fromStdString(main_data.h_asf.root.name);
             AddRoot_asf(QString::fromStdString(main_data.h_asf.root.name));
             ui->treeWidget->expandAll();
 
-            qDebug()<<"widgety2";
+            //qDebug()<<"widgety2";
 
             QString file_name = QFileDialog::getOpenFileName(this,"Open file",desktop_path,"*.amc"); //pobranie nazwy pliku (ścieżka)
-            QMessageBox::information(this,"..",file_name);
+            //QMessageBox::information(this,"..",file_name);
             if(file_name==""){
                 return;
             }
@@ -2271,21 +2176,27 @@ void MainWindow::on_actionLoad_triggered()
             file1.open((file_name.toStdString()).c_str());
             main_data.f_amc=main_data.create_frames_asf(file1,main_data.h_asf);
             file1.close();
-
+            QMessageBox::information(this,"..","amc");
             //calc_positions_asf(main_data.h_asf,main_data.f_amc);
             //main_data.calc_asf_pos_angle(main_data.h_asf,main_data.f_amc,ui->comboBox_3->currentText().toStdString());
             main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
+            QMessageBox::information(this,"..","pc_index");
             main_data.asf_position(main_data.h_asf,main_data.f_amc);
+            QMessageBox::information(this,"..","position");
             on_comboBox_currentTextChanged(ui->comboBox->currentText());
             //setup_table();
             fill_table();
             ui->cylinders->setChecked(true);
             on_cylinders_clicked();
             int s_max=main_data.f_amc.frames.size();
-            ui->horizontalSlider->setMaximum(s_max);
+            ui->slider->setMaximum(s_max);
             //main_data.asf_pc_index(main_data.h_asf,main_data.f_amc);
-            qDebug()<<"start\n";
-            timer->setInterval(0.03*1000);
+            //qDebug()<<"start\n";
+            interval=0.03*1000;
+            timer->setInterval(interval);
+            fps=1/0.03;
+            ui->frames_second->setValue(fps);
+
 //            draw();
          //   stop=true;
 
@@ -2296,34 +2207,34 @@ void MainWindow::on_actionSave_triggered()
 {
     QString desktop_path=QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     QString file_name = QFileDialog::getSaveFileName(this,"Save file",desktop_path,"*.bvh ;; *.asf"); //pobranie nazwy pliku (ścieżka)
-    QMessageBox::information(this,"..",file_name);
+    //QMessageBox::information(this,"..",file_name);
     if(file_name==""){
         return;
     }
     QFileInfo file_info(file_name);
     QString extension=file_info.suffix();
     if(extension=="bvh"){
-        QMessageBox::information(this,"..","bvh");
+        //QMessageBox::information(this,"..","bvh");
 
 
 
-        if (ui->radioButton->isChecked())
+        if (ui->bvh->isChecked())
         {//bvh
             if (main_data.h_bvh.joints.size()>0)
             {
                 ofstream file;
                 file.open((file_name.toStdString()).c_str());
-                return_bvh r_bvh;
+                return_bvh_hierarchy_motion r_bvh;
                 //main_data.bvh_reorder(main_data.h_bvh,main_data.f_bvh,ui->comboBox_3->currentText().toStdString()); reorder przed zapisem
                 main_data.write_bvh(file,main_data.h_bvh,main_data.f_bvh);
                 file.close();
             }
         }
-        if (ui->radioButton_2->isChecked())
+        if (ui->asf->isChecked())
         {//asf
             if (main_data.h_asf.joints.size()>0)
             {
-                return_bvh r_bvh;
+                return_bvh_hierarchy_motion r_bvh;
                 ofstream file;
                 file.open((file_name.toStdString()).c_str());
                 //r_asf=main_data.asf_reorder(main_data.h_asf,main_data.f_amc,ui->comboBox_3->currentText().toStdString()); //reorder przed konwersją i zapisem
@@ -2336,34 +2247,34 @@ void MainWindow::on_actionSave_triggered()
         }
     }
     if(extension=="asf"){
-        QMessageBox::information(this,"..","asf");
+        //QMessageBox::information(this,"..","asf");
 
 
-        if (ui->radioButton->isChecked()) {//bvh
+        if (ui->bvh->isChecked()) {//bvh
             if (main_data.h_bvh.joints.size()>0) {
             return_asf r_asf;
-            return_bvh r_bvh;
+            return_bvh_hierarchy_motion r_bvh;
             ofstream file;
             file.open((file_name.toStdString()).c_str());
-            qDebug()<<"start\n";
+            //qDebug()<<"start\n";
             //main_data.bvh_reorder(main_data.h_bvh,main_data.f_bvh,ui->comboBox_3->currentText().toStdString()); //reorder przed zapisem i konwersją
 
             r_asf= main_data.bvh_to_asf_conversion(main_data.h_bvh,main_data.f_bvh);
            // string t=r_asf.h_asf.joints[2].name;
-             qDebug()<<"conv\n";
+             //qDebug()<<"conv\n";
             main_data.write_asf(file,r_asf.h_asf,r_asf.f_amc);
-             qDebug()<<"zapis asf\n";
+             //qDebug()<<"zapis asf\n";
             file.close();
             file_name.replace(".asf",".amc");
-            QMessageBox::information(this,"..",file_name);
+            //QMessageBox::information(this,"..",file_name);
             file.open((file_name.toStdString()).c_str());
 
             main_data.write_frames_asf(file,r_asf.h_asf,r_asf.f_amc);
-             qDebug()<<"zapis amc\n";
+             //qDebug()<<"zapis amc\n";
             file.close();
         }
         }
-        if (ui->radioButton_2->isChecked()) {//asf
+        if (ui->asf->isChecked()) {//asf
             if (main_data.h_asf.joints.size()>0) {
 
             ofstream file;
@@ -2373,7 +2284,7 @@ void MainWindow::on_actionSave_triggered()
             main_data.write_asf(file,main_data.h_asf,main_data.f_amc);
             file.close();
             file_name.replace(".asf",".amc");
-            QMessageBox::information(this,"..",file_name);
+           // QMessageBox::information(this,"..",file_name);
             file.open((file_name.toStdString()).c_str());
             main_data.write_frames_asf(file,main_data.h_asf,main_data.f_amc);
             file.close();
@@ -2383,10 +2294,10 @@ void MainWindow::on_actionSave_triggered()
 
 }
 
-void MainWindow::on_button_offset_apply_clicked()
-{
+//void MainWindow::on_button_offset_apply_clicked()
+//{
 
-}
+//}
 
 void MainWindow::on_angleX_stateChanged(int arg1)
 {
@@ -2436,10 +2347,10 @@ void MainWindow::on_angleZ_stateChanged(int arg1)
     }
 }
 
-void MainWindow::on_positionY_clicked()
-{
+//void MainWindow::on_positionY_clicked()
+//{
 
-}
+//}
 
 void MainWindow::on_actionAbout_triggered()
 {
@@ -2457,7 +2368,7 @@ void MainWindow::on_actionAbout_triggered()
                 "elementów hierarchii.\n"
                 "Zmiany można wprowadzić po przez formularz po lewej stronie okna głównego\n."
                 "Dodawanie, usuwanie i zmiana nazwy elementów hierarhii zrealizowane są\n"
-                "po przez dzrzewo hierarhii umieszczone po prawej stronie okna głównego.\n"
+                "po przez drzewo hierarhii umieszczone po prawej stronie okna głównego.\n"
                 "Pole grafu umożliwia wyświtlenie współrzędnych x,y,z oraz kątów obrotu\n"
                 "wokół osi x,y,z dla wybranej części szkieletu oraz przy określonej kolejności\n"
                 "rotacji.\n"
@@ -2467,8 +2378,8 @@ void MainWindow::on_actionAbout_triggered()
     QMessageBox::about(this,"About",str);
 }
 
-void MainWindow::on_horizontalSlider_2_valueChanged(int value) {
-}
+//void MainWindow::on_horizontalSlider_2_valueChanged(int value) {
+//}
 
 void MainWindow::on_cylinders_clicked()
 {
@@ -2544,45 +2455,45 @@ QVector<Vertex>  cyl(QVector3D vec, QVector3D up, QVector3D off, QVector3D color
     }
     return     full_vertex_vector;
 }
-void MainWindow::cylinder()
+//void MainWindow::cylinder()
+//{
+//    auto vec1 = cyl(QVector3D(0.1,0,0),
+//                    QVector3D(0,0.75,0),
+//                    QVector3D(0,0,0),
+//                    QVector3D(1,0,0)
+//                    );
+//    auto vec2 = cyl(QVector3D(0.1,0,0),
+//                    QVector3D(0,0.5,0),
+//                    QVector3D(0.5,0.5,0),
+//                    QVector3D(0,1,0));
+////vec1.append(vec2);
+//    Vertex vert1 = Vertex( QVector3D(  1000.0f,  0.0f,  0.0f), QVector3D( 1.0f, 0.0f, 0.0f ));
+//    Vertex vert2 = Vertex( QVector3D(  -1000.0f,  0.0f,  0.0f), QVector3D( 1.0f, 0.0f, 0.0f ));
+
+//    Vertex vert3 = Vertex( QVector3D(  0.0f,  0.0f,  1000.0f), QVector3D( 0.0f, 0.0f, 1.0f ));
+//    Vertex vert4 = Vertex( QVector3D(  0.0f,  0.0f,  -1000.0f), QVector3D( 0.0f, 0.0f, 1.0f ));
+
+//    QVector <Vertex> full_vertex_vector;
+//    full_vertex_vector.push_back(vert1);
+//    full_vertex_vector.push_back(vert2);
+
+//    full_vertex_vector.push_back(vert3);
+//    full_vertex_vector.push_back(vert4);
+
+//    full_vertex_vector.append(vec1);
+//    full_vertex_vector.append(vec2);
+//    ui->openGLWidget_2->refresh(full_vertex_vector,0);
+
+//}
+
+//void MainWindow::on_line_len_textChanged(const QString &arg1)
+//{
+
+//}
+
+void MainWindow::on_slider_sliderPressed()
 {
-    auto vec1 = cyl(QVector3D(0.1,0,0),
-                    QVector3D(0,0.75,0),
-                    QVector3D(0,0,0),
-                    QVector3D(1,0,0)
-                    );
-    auto vec2 = cyl(QVector3D(0.1,0,0),
-                    QVector3D(0,0.5,0),
-                    QVector3D(0.5,0.5,0),
-                    QVector3D(0,1,0));
-//vec1.append(vec2);
-    Vertex vert1 = Vertex( QVector3D(  1000.0f,  0.0f,  0.0f), QVector3D( 1.0f, 0.0f, 0.0f ));
-    Vertex vert2 = Vertex( QVector3D(  -1000.0f,  0.0f,  0.0f), QVector3D( 1.0f, 0.0f, 0.0f ));
-
-    Vertex vert3 = Vertex( QVector3D(  0.0f,  0.0f,  1000.0f), QVector3D( 0.0f, 0.0f, 1.0f ));
-    Vertex vert4 = Vertex( QVector3D(  0.0f,  0.0f,  -1000.0f), QVector3D( 0.0f, 0.0f, 1.0f ));
-
-    QVector <Vertex> full_vertex_vector;
-    full_vertex_vector.push_back(vert1);
-    full_vertex_vector.push_back(vert2);
-
-    full_vertex_vector.push_back(vert3);
-    full_vertex_vector.push_back(vert4);
-
-    full_vertex_vector.append(vec1);
-    full_vertex_vector.append(vec2);
-    ui->openGLWidget_2->refresh(full_vertex_vector,0);
-
-}
-
-void MainWindow::on_line_len_textChanged(const QString &arg1)
-{
-
-}
-
-void MainWindow::on_horizontalSlider_sliderPressed()
-{
-    int position=ui->horizontalSlider->value();
+    int position=ui->slider->value();
     frame=position;
     draw();
 }
@@ -2607,7 +2518,7 @@ void MainWindow::on_actionthrow_asf_triggered()
         {
             file<<"name "<<main_data.h_asf.joints[j].name<<"\n";
             file<<"position x "<<main_data.h_asf.joints[j].cords[f].x<<", y "<<main_data.h_asf.joints[j].cords[f].y<<", z "<<main_data.h_asf.joints[j].cords[f].z<<"\n";
-            file<<"angles x "<<main_data.h_asf.joints[j].angles[f].x<<", y "<<main_data.h_asf.joints[j].cords[f].y<<" , z "<<main_data.h_asf.joints[j].cords[f].z<<"\n";
+            file<<"angles x "<<main_data.h_asf.joints[j].angles[f].x<<", y "<<main_data.h_asf.joints[j].angles[f].y<<" , z "<<main_data.h_asf.joints[j].angles[f].z<<"\n";
 
             file<<"self-matrix\n";
             QMatrix4x4 matrix0=main_data.h_asf.joints[j].self_matrix[f];
@@ -2651,7 +2562,7 @@ void MainWindow::on_actionthrow_bvh_triggered()
         {
             file<<"name "<<main_data.h_bvh.joints[j].name<<"\n";
             file<<"position x "<<main_data.h_bvh.joints[j].cords[f].x<<", y "<<main_data.h_bvh.joints[j].cords[f].y<<", z "<<main_data.h_bvh.joints[j].cords[f].z<<"\n";
-            file<<"angles x "<<main_data.h_bvh.joints[j].angles[f].x<<", y "<<main_data.h_bvh.joints[j].cords[f].y<<" , z "<<main_data.h_bvh.joints[j].cords[f].z<<"\n";
+            file<<"angles x "<<main_data.h_bvh.joints[j].angles[f].x<<", y "<<main_data.h_bvh.joints[j].angles[f].y<<" , z "<<main_data.h_bvh.joints[j].angles[f].z<<"\n";
 
             file<<"self-matrix\n";
             QMatrix4x4 matrix0=main_data.h_bvh.joints[j].self_matrix[f];
@@ -2680,7 +2591,7 @@ void MainWindow::on_actionthrow_bvh_triggered()
 void MainWindow::on_offsets_clicked()
 {
 
-    if(ui->radioButton->isChecked())
+    if(ui->bvh->isChecked())
     {
         if(main_data.h_bvh.joints.size()<=0)
         {
@@ -2710,7 +2621,7 @@ void MainWindow::on_offsets_clicked()
 
 
 
-    if(ui->radioButton_2->isChecked())
+    if(ui->asf->isChecked())
     {
         if(main_data.h_asf.joints.size()<=0)
         {
@@ -2747,4 +2658,44 @@ void MainWindow::on_offsets_clicked()
         on_comboBox_currentTextChanged(ui->comboBox->currentText());
         draw();
     }
+}
+
+void MainWindow::on_stop_button_clicked()
+{
+    frame=0;
+    timer->stop();
+    ui->slider->setValue(0);
+    draw();
+}
+
+
+
+void MainWindow::on_frames_second_sliderPressed()
+{
+    interval=1/ui->frames_second->value()*1000;
+    timer->setInterval(interval);
+    fps=ui->frames_second->value();
+    QString text="frames per second ";
+    text.append(QString::number(fps));
+    ui->fps->setText(text);
+}
+
+void MainWindow::on_frames_second_sliderMoved(int position)
+{
+    interval=1/ui->frames_second->value()*1000;
+    timer->setInterval(interval);
+    fps=ui->frames_second->value();
+    QString text="frames per second ";
+    text.append(QString::number(fps));
+    ui->fps->setText(text);
+}
+
+void MainWindow::on_frames_second_sliderReleased()
+{
+    interval=1/ui->frames_second->value()*1000;
+    timer->setInterval(interval);
+    fps=ui->frames_second->value();
+    QString text="frames per second ";
+    text.append(QString::number(fps));
+    ui->fps->setText(text);
 }
